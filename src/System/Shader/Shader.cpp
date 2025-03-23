@@ -36,8 +36,9 @@ fl::Shader::SPIRVBinary fl::Shader::readShaderFile(const std::string &path)
     file.seekg(0);
     file.read(reinterpret_cast<char *>(content.data()), filesize);
     file.close();
-
+#ifndef NDEBUG
     std::cout << "LOADED SHADER " << path << " (" << filesize << " bytes)" << std::endl;
+#endif
 
     return std::move(content);
 }

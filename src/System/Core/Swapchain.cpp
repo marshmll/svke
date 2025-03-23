@@ -430,7 +430,10 @@ VkPresentModeKHR fl::Swapchain::choosePresentMode(const std::vector<VkPresentMod
     {
         if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
         {
+#ifndef NDEBUG
             std::cout << "PRESENT MODE: MAILBOX" << std::endl;
+#endif
+
             return mode;
         }
     }
