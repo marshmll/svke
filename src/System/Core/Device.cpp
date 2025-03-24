@@ -31,6 +31,11 @@ VmaAllocator fl::Device::getAllocator()
     return allocator;
 }
 
+const VkPhysicalDeviceProperties &fl::Device::getProperties() const
+{
+    return properties;
+}
+
 VkDevice fl::Device::getLogicalDevice()
 {
     return device;

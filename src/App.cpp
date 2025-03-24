@@ -2,14 +2,14 @@
 
 fl::App::App()
 {
-    window = std::make_unique<Window>(846, 468, "Flare");
+    window = std::make_unique<Window>(600, 600, "Flare");
     device = std::make_unique<Device>(*window);
     swapchain = std::make_unique<Swapchain>(*device, *window);
 
     vertShader = std::make_unique<Shader>(*device, "shaders/vertex.spv");
     fragShader = std::make_unique<Shader>(*device, "shaders/fragment.spv");
 
-    loadModels();
+    loadDrawables();
     createPipelineLayout();
     recreateSwapchain();
     createCommandBuffers();
@@ -29,25 +29,38 @@ void fl::App::run()
     }
 }
 
-void fl::App::loadModels()
+void fl::App::loadDrawables()
 {
     VertexArray vertices =
-        VertexArray{{Vertex{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}}, Vertex{{0.0f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+        VertexArray{{Vertex{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}}, Vertex{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
                      Vertex{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}}};
 
-    model = std::make_unique<Model>(*device);
-
+    auto model = std::make_shared<Model>(*device);
     model->loadFromData(vertices);
+
+    Drawable triangle;
+    triangle.setModel(model);
+    triangle.setColor({1.f, 0.f, 0.f});
+    triangle.translate({0.f, 0.f});
+    triangle.setScale({2.f, 0.5f});
+    triangle.rotate(45.f);
+
+    drawables.push_back(std::move(triangle));
 }
 
 void fl::App::createPipelineLayout()
 {
+    VkPushConstantRange push_constant_range = {};
+    push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    push_constant_range.offset = 0;
+    push_constant_range.size = sizeof(PushConstantData);
+
     VkPipelineLayoutCreateInfo pipeline_layout_info = {};
     pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipeline_layout_info.setLayoutCount = 0;
     pipeline_layout_info.pSetLayouts = nullptr;
-    pipeline_layout_info.pushConstantRangeCount = 0;
-    pipeline_layout_info.pPushConstantRanges = nullptr;
+    pipeline_layout_info.pushConstantRangeCount = 1;
+    pipeline_layout_info.pPushConstantRanges = &push_constant_range;
 
     if (vkCreatePipelineLayout(device->getLogicalDevice(), &pipeline_layout_info, nullptr, &pipelineLayout) !=
         VK_SUCCESS)
@@ -114,6 +127,25 @@ void fl::App::drawFrame()
 
     if (result != VK_SUCCESS)
         throw std::runtime_error("fl::App::drawFrame: FAILED TO PRESENT SWAPCHAIN IMAGE");
+}
+
+void fl::App::drawDrawables(VkCommandBuffer &command_buffer)
+{
+    pipeline->bind(command_buffer);
+
+    for (auto &drawable : drawables)
+    {
+        PushConstantData push = {};
+        push.offset = drawable.getTransform2d().translation;
+        push.color = drawable.getColor();
+        push.transform = drawable.transform();
+
+        vkCmdPushConstants(command_buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+                           sizeof(PushConstantData), &push);
+
+        drawable.bind(command_buffer);
+        drawable.draw(command_buffer);
+    }
 }
 
 void fl::App::recreateSwapchain()
@@ -196,14 +228,7 @@ void fl::App::recordCommandBuffer(uint32_t image_index)
     vkCmdSetViewport(commandBuffers[image_index], 0, 1, &viewport);
     vkCmdSetScissor(commandBuffers[image_index], 0, 1, &scissor);
 
-    /* BIND PIPELINE ---------------------------------------------------------------------------------------- */
-
-    pipeline->bind(commandBuffers[image_index]);
-
-    /* DRAWING ---------------------------------------------------------------------------------------------- */
-
-    model->bind(commandBuffers[image_index]);
-    model->draw(commandBuffers[image_index]);
+    drawDrawables(commandBuffers[image_index]);
 
     /* END RENDER PASS -------------------------------------------------------------------------------------- */
 

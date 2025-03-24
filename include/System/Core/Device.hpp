@@ -46,6 +46,8 @@ class Device
 
     VmaAllocator getAllocator();
 
+    const VkPhysicalDeviceProperties &getProperties() const;
+
     VkDevice getLogicalDevice();
 
     VkSurfaceKHR getSurface();
