@@ -18,14 +18,18 @@ class Pipeline
   public:
     struct Config
     {
-        VkViewport viewport;
-        VkRect2D scissor;
+        Config(const Config &) = delete;
+        Config &operator=(const Config &) = delete;
+
+        VkPipelineViewportStateCreateInfo viewportInfo;
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
         VkPipelineRasterizationStateCreateInfo rasterizationInfo;
         VkPipelineMultisampleStateCreateInfo multisampleInfo;
         VkPipelineColorBlendAttachmentState colorBlendAttachment;
         VkPipelineColorBlendStateCreateInfo colorBlendInfo;
         VkPipelineDepthStencilStateCreateInfo depthStencilInfo;
+        std::vector<VkDynamicState> dynamicStatesEnable;
+        VkPipelineDynamicStateCreateInfo dynamicStateInfo;
         VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
         VkRenderPass renderPass = VK_NULL_HANDLE;
         uint32_t subpass = 0;
@@ -34,6 +38,9 @@ class Pipeline
     Pipeline(Device &device, const std::string &vert_path, const std::string &frag_path);
     Pipeline(Device &device, const std::string &vert_path, const std::string &frag_path, const Config &config);
 
+    Pipeline(Device &device, Shader &vert_shader, Shader &frag_shader);
+    Pipeline(Device &device, Shader &vert_shader, Shader &frag_shader, const Config &config);
+
     Pipeline(const Pipeline &) = delete;
     Pipeline &operator=(const Pipeline &) = delete;
 
@@ -41,14 +48,14 @@ class Pipeline
 
     void bind(VkCommandBuffer &command_buffer);
 
-    static const Config defaultPipelineConfig(const uint32_t width, const uint32_t height);
+    static void defaultPipelineConfig(Config &config);
 
   private:
     Device &device;
-    Config config;
     VkPipeline graphicsPipeline;
 
     void createGraphicsPipeline(const Config &config, const std::string &vert_path, const std::string &frag_path);
+    void createGraphicsPipeline(const Config &config, Shader &vert_shader, Shader &frag_shader);
 };
 
 } // namespace fl

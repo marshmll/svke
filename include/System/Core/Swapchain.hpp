@@ -3,8 +3,14 @@
 #include "System/Core/Window.hpp"
 #include "System/Core/Device.hpp"
 
-#include <string>
-#include <vector>
+#include <array>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+#include <limits>
+#include <set>
+#include <stdexcept>
+#include <memory>
 
 namespace fl
 {
@@ -14,10 +20,13 @@ class Swapchain
     static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
     Swapchain(Device &device, Window &window);
+    Swapchain(Device &device, Window &window, std::shared_ptr<Swapchain> &previous);
     ~Swapchain();
 
     Swapchain(const Swapchain &) = delete;
     Swapchain &operator=(const Swapchain &) = delete;
+
+    VkSwapchainKHR getHandle();
 
     VkFramebuffer getFramebuffer(const int index);
 
@@ -60,12 +69,15 @@ class Swapchain
     std::vector<VkImageView> imageViews;
 
     VkSwapchainKHR swapchain;
+    std::shared_ptr<Swapchain> oldSwapchain;
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
     std::vector<VkFence> inFlightFences;
     std::vector<VkFence> imagesInFlight;
-    size_t currentFrame = 0;
+    size_t currentFrame;
+
+    void init();
 
     void createSwapchain();
 

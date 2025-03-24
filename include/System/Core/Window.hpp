@@ -34,10 +34,21 @@ class Window
 
     VkExtent2D getExtent() const;
 
+    const bool wasResized() const;
+
+    void setResized(const bool resized);
+
+    void setWidth(uint32_t width);
+
+    void setHeight(uint32_t height);
+
   private:
     GLFWwindow *window;
     int width;
     int height;
     std::string title;
+    bool framebufferResized;
+
+    static void framebufferResizedCallback(GLFWwindow *window, int width, int height);
 };
 } // namespace fl

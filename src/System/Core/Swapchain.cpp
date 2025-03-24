@@ -1,21 +1,17 @@
 #include "System/Core/Swapchain.hpp"
 
-#include <array>
-#include <cstdlib>
-#include <cstring>
-#include <iostream>
-#include <limits>
-#include <set>
-#include <stdexcept>
-
-fl::Swapchain::Swapchain(Device &device, Window &window) : device(device), window(window)
+fl::Swapchain::Swapchain(Device &device, Window &window) : device(device), window(window), currentFrame(0)
 {
-    createSwapchain();
-    createImageViews();
-    createRenderPass();
-    createDepthResources();
-    createFramebuffers();
-    createSyncObjects();
+    init();
+}
+
+fl::Swapchain::Swapchain(Device &device, Window &window, std::shared_ptr<Swapchain> &previous)
+    : device(device), window(window), oldSwapchain(previous), currentFrame(0)
+{
+    init();
+
+    // Give up ownership
+    oldSwapchain = nullptr;
 }
 
 fl::Swapchain::~Swapchain()
@@ -53,6 +49,11 @@ fl::Swapchain::~Swapchain()
         vkDestroySemaphore(device.getLogicalDevice(), imageAvailableSemaphores[i], nullptr);
         vkDestroyFence(device.getLogicalDevice(), inFlightFences[i], nullptr);
     }
+}
+
+VkSwapchainKHR fl::Swapchain::getHandle()
+{
+    return swapchain;
 }
 
 VkFramebuffer fl::Swapchain::getFramebuffer(const int index)
@@ -159,6 +160,16 @@ VkResult fl::Swapchain::submitCommandBuffers(const VkCommandBuffer &buffers, uin
     return result;
 }
 
+void fl::Swapchain::init()
+{
+    createSwapchain();
+    createImageViews();
+    createRenderPass();
+    createDepthResources();
+    createFramebuffers();
+    createSyncObjects();
+}
+
 void fl::Swapchain::createSwapchain()
 {
     Device::SwapchainSupportDetails swapchainSupport = device.getSwapchainSupport();
@@ -206,7 +217,7 @@ void fl::Swapchain::createSwapchain()
     swapchain_info.presentMode = presentMode;
     swapchain_info.clipped = VK_TRUE;
 
-    swapchain_info.oldSwapchain = VK_NULL_HANDLE;
+    swapchain_info.oldSwapchain = oldSwapchain ? oldSwapchain->getHandle() : VK_NULL_HANDLE;
 
     if (vkCreateSwapchainKHR(device.getLogicalDevice(), &swapchain_info, nullptr, &swapchain) != VK_SUCCESS)
     {
@@ -415,7 +426,7 @@ VkSurfaceFormatKHR fl::Swapchain::chooseSurfaceFormat(const std::vector<VkSurfac
 {
     for (const auto &format : available_formats)
     {
-        if (format.format == VK_FORMAT_B8G8R8A8_UNORM && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+        if (format.format == VK_FORMAT_B8G8R8A8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
         {
             return format;
         }

@@ -15,6 +15,7 @@
 #include <GLFW/glfw3.h>
 
 #include <vector>
+#include <cstddef>
 
 namespace fl
 {
@@ -25,6 +26,7 @@ typedef std::vector<Vertex> VertexArray;
 struct Vertex
 {
     glm::vec2 position;
+    glm::vec3 color;
 
     inline static std::vector<VkVertexInputBindingDescription> getBindingDescriptions()
     {
@@ -39,12 +41,17 @@ struct Vertex
 
     inline static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions()
     {
-        std::vector<VkVertexInputAttributeDescription> attribute_descriptions(1);
+        std::vector<VkVertexInputAttributeDescription> attribute_descriptions(2);
 
         attribute_descriptions[0].binding = 0;
         attribute_descriptions[0].location = 0;
         attribute_descriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
-        attribute_descriptions[0].offset = 0;
+        attribute_descriptions[0].offset = offsetof(Vertex, position);
+
+        attribute_descriptions[1].binding = 0;
+        attribute_descriptions[1].location = 1;
+        attribute_descriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attribute_descriptions[1].offset = offsetof(Vertex, color);
 
         return std::move(attribute_descriptions);
     }

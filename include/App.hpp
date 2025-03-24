@@ -29,12 +29,18 @@ class App
     std::unique_ptr<Pipeline> pipeline;
     std::vector<VkCommandBuffer> commandBuffers;
 
+    std::unique_ptr<Shader> vertShader;
+    std::unique_ptr<Shader> fragShader;
+
     std::unique_ptr<Model> model;
 
     void loadModels();
     void createPipelineLayout();
     void createPipeline();
     void createCommandBuffers();
+    void freeCommandBuffers();
     void drawFrame();
+    void recreateSwapchain();
+    void recordCommandBuffer(uint32_t image_index);
 };
 } // namespace fl
