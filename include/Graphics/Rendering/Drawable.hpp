@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Graphics/Core/Model.hpp"
+#include "Graphics/Color/Color.hpp"
 
 #ifndef GLM_FORCE_RADIANS
 #define GLM_FORCE_RADIANS
@@ -8,6 +9,7 @@
 #ifndef GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #endif
+#include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 
 #include <memory>
@@ -34,8 +36,8 @@ class Drawable
         }
     };
 
-    Drawable();
-    Drawable(std::shared_ptr<Model> &model);
+    Drawable(const Color &color = COLOR_WHITE);
+    Drawable(std::shared_ptr<Model> &model, const Color &color = COLOR_WHITE);
     Drawable &operator=(const Drawable &) = delete;
     Drawable(Drawable &&) = default;
     Drawable &operator=(Drawable &&) = default;
@@ -44,7 +46,7 @@ class Drawable
 
     void draw(VkCommandBuffer &command_buffer);
 
-    const glm::vec3 &getColor() const;
+    const Color &getColor() const;
 
     const Transform2dComponent &getTransform2d() const;
 
@@ -52,7 +54,7 @@ class Drawable
 
     void setModel(std::shared_ptr<Model> &model);
 
-    void setColor(const glm::vec3 &color);
+    void setColor(const Color &color);
 
     void translate(const glm::vec2 &translation);
 
@@ -62,7 +64,7 @@ class Drawable
 
   protected:
     std::shared_ptr<Model> model;
-    glm::vec3 color;
+    Color color;
     Transform2dComponent transform2d;
 };
 } // namespace fl

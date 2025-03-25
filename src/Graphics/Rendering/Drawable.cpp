@@ -1,10 +1,10 @@
 #include "Graphics/Rendering/Drawable.hpp"
 
-fl::Drawable::Drawable() : color({1.f, 1.f, 1.f})
+fl::Drawable::Drawable(const Color &color) : color(color)
 {
 }
 
-fl::Drawable::Drawable(std::shared_ptr<Model> &model) : model(model), color({1.f, 1.f, 1.f})
+fl::Drawable::Drawable(std::shared_ptr<Model> &model, const Color &color) : model(model), color(color)
 {
 }
 
@@ -24,7 +24,7 @@ void fl::Drawable::draw(VkCommandBuffer &command_buffer)
     model->draw(command_buffer);
 }
 
-const glm::vec3 &fl::Drawable::getColor() const
+const fl::Color &fl::Drawable::getColor() const
 {
     return color;
 }
@@ -44,7 +44,7 @@ void fl::Drawable::setModel(std::shared_ptr<Model> &model)
     this->model = model;
 }
 
-void fl::Drawable::setColor(const glm::vec3 &color)
+void fl::Drawable::setColor(const Color &color)
 {
     this->color = color;
 }
