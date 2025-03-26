@@ -22,8 +22,7 @@ class RenderSystem
 {
     struct PushConstantData
     {
-        ALIGNAS_MAT2 glm::mat2 transform{1.f};
-        ALIGNAS_VEC2 glm::vec2 offset;
+        ALIGNAS_MAT4 glm::mat4 transform{1.f};
         ALIGNAS_VEC3 glm::vec3 color;
     };
 

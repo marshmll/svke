@@ -36,6 +36,8 @@ class Renderer
 
     const bool isFrameInProgress() const;
 
+    const int getCurrentFrameIndex() const;
+
     VkCommandBuffer &getCurrentCommandBuffer();
 
     VkRenderPass getRenderPass();
@@ -50,6 +52,7 @@ class Renderer
     std::vector<VkCommandBuffer> commandBuffers;
 
     uint32_t currentImageIndex;
+    int currentFrameIndex;
     bool frameInProgress;
 
     void createCommandBuffers();

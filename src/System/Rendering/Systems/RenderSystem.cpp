@@ -18,8 +18,12 @@ void fl::RenderSystem::render(VkCommandBuffer &command_buffer, std::vector<Drawa
 
     for (auto &drawable : drawables)
     {
+        auto rot = drawable.getRotation();
+        rot.y = glm::mod(rot.y + 0.001f, glm::two_pi<float>());
+        rot.x = glm::mod(rot.x + 0.0005f, glm::two_pi<float>());
+        drawable.setRotation(rot);
+
         PushConstantData push = {};
-        push.offset = drawable.getTransform2d().translation;
         push.color = drawable.getColor().toVec3();
         push.transform = drawable.transform();
 

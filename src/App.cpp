@@ -44,24 +44,16 @@ void fl::App::createDevice()
 
 void fl::App::createRenderer()
 {
-    renderer = std::make_unique<Renderer>(*device, *window, COLOR_WHITE);
+    renderer = std::make_unique<Renderer>(*device, *window);
 }
 
 void fl::App::loadDrawables()
 {
-    VertexArray vertices =
-        VertexArray{{Vertex{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}}, Vertex{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-                     Vertex{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}}};
+    std::shared_ptr<Model> model = Model::createCubeModel(*device, {0.f, 0.f, 0.f});
 
-    auto model = std::make_shared<Model>(*device);
-    model->loadFromData(vertices);
-
-    Drawable triangle;
-    triangle.setModel(model);
-    triangle.setColor(COLOR_RED);
-    triangle.translate({0.f, 0.f});
-    triangle.setScale({1.f, 0.5f});
-    triangle.rotate(70.f);
-
-    drawables.push_back(std::move(triangle));
+    Drawable cube;
+    cube.setModel(model);
+    cube.setTranslation({0.f, 0.f, 0.5f});
+    cube.setScale({0.5f, 0.5f, 0.5f});
+    drawables.push_back(std::move(cube));
 }

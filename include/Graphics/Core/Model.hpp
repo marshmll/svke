@@ -6,6 +6,7 @@
 #include <vk_mem_alloc.h>
 
 #include <cstring>
+#include <memory>
 
 namespace fl
 {
@@ -24,6 +25,7 @@ class Model
 
     void draw(VkCommandBuffer &command_buffer);
 
+    static std::unique_ptr<Model> createCubeModel(Device &device, const glm::vec3 &offset);
   private:
     Device &device;
 

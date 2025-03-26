@@ -24,19 +24,39 @@ void fl::Drawable::draw(VkCommandBuffer &command_buffer)
     model->draw(command_buffer);
 }
 
+glm::mat4 fl::Drawable::transform()
+{
+    return transformComponent.mat4();
+}
+
+const glm::vec3 &fl::Drawable::getTranslation() const
+{
+    return transformComponent.translation;
+}
+
+const glm::vec3 &fl::Drawable::getScale() const
+{
+    return transformComponent.scale;
+}
+
+const glm::vec3 &fl::Drawable::getRotation() const
+{
+    return transformComponent.rotation;
+}
+
 const fl::Color &fl::Drawable::getColor() const
 {
     return color;
 }
 
-glm::mat2 fl::Drawable::transform()
+const std::shared_ptr<fl::Model> &fl::Drawable::getModel() const
 {
-    return transform2d.mat2();
+    return model;
 }
 
-const fl::Drawable::Transform2dComponent &fl::Drawable::getTransform2d() const
+const fl::Drawable::TransformComponent &fl::Drawable::getTransformComponent() const
 {
-    return transform2d;
+    return transformComponent;
 }
 
 void fl::Drawable::setModel(std::shared_ptr<Model> &model)
@@ -49,17 +69,17 @@ void fl::Drawable::setColor(const Color &color)
     this->color = color;
 }
 
-void fl::Drawable::translate(const glm::vec2 &translation)
+void fl::Drawable::setTranslation(const glm::vec3 &translation)
 {
-    transform2d.translation = translation;
+    transformComponent.translation = translation;
 }
 
-void fl::Drawable::setScale(const glm::vec2 &scale)
+void fl::Drawable::setScale(const glm::vec3 &scale)
 {
-    transform2d.scale = scale;
+    transformComponent.scale = scale;
 }
 
-void fl::Drawable::rotate(const float angle)
+void fl::Drawable::setRotation(const glm::vec3 &rotation)
 {
-    transform2d.rotation = (angle / 360.f) * glm::two_pi<float>();
+    transformComponent.rotation = rotation;
 }

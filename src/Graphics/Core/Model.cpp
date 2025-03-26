@@ -32,6 +32,67 @@ void fl::Model::draw(VkCommandBuffer &command_buffer)
     vkCmdDraw(command_buffer, vertexCount, 1, 0, 0);
 }
 
+std::unique_ptr<fl::Model> fl::Model::createCubeModel(Device &device, const glm::vec3 &offset)
+{
+    VertexArray vertices = VertexArray{
+        // Left face
+        Vertex{{-0.5f, -0.5f, -0.5f}, {1.f, 1.f, 1.f}},
+        Vertex{{-0.5f, 0.5f, 0.5f}, {1.f, 1.f, 1.f}},
+        Vertex{{-0.5f, -0.5f, 0.5f}, {1.f, 1.f, 1.f}},
+        Vertex{{-0.5f, -0.5f, -0.5f}, {1.f, 1.f, 1.f}},
+        Vertex{{-0.5f, 0.5f, -0.5f}, {1.f, 1.f, 1.f}},
+        Vertex{{-0.5f, 0.5f, 0.5f}, {1.f, 1.f, 1.f}},
+
+        // Right face
+        Vertex{{0.5f, -0.5f, -0.5f}, {.8f, .8f, .1f}},
+        Vertex{{0.5f, 0.5f, 0.5f}, {.8f, .8f, .1f}},
+        Vertex{{0.5f, -0.5f, 0.5f}, {.8f, .8f, .1f}},
+        Vertex{{0.5f, -0.5f, -0.5f}, {.8f, .8f, .1f}},
+        Vertex{{0.5f, 0.5f, -0.5f}, {.8f, .8f, .1f}},
+        Vertex{{0.5f, 0.5f, 0.5f}, {.8f, .8f, .1f}},
+
+        // Top face
+        Vertex{{-0.5f, -0.5f, -0.5f}, {.9f, .6f, .1f}},
+        Vertex{{0.5f, -0.5f, 0.5f}, {.9f, .6f, .1f}},
+        Vertex{{-0.5f, -0.5f, 0.5f}, {.9f, .6f, .1f}},
+        Vertex{{-0.5f, -0.5f, -0.5f}, {.9f, .6f, .1f}},
+        Vertex{{0.5f, -0.5f, -0.5f}, {.9f, .6f, .1f}},
+        Vertex{{0.5f, -0.5f, 0.5f}, {.9f, .6f, .1f}},
+
+        // Bottom face
+        Vertex{{-0.5f, 0.5f, -0.5f}, {.8f, .1f, .1f}},
+        Vertex{{0.5f, 0.5f, 0.5f}, {.8f, .1f, .1f}},
+        Vertex{{-0.5f, 0.5f, 0.5f}, {.8f, .1f, .1f}},
+        Vertex{{-0.5f, 0.5f, -0.5f}, {.8f, .1f, .1f}},
+        Vertex{{0.5f, 0.5f, -0.5f}, {.8f, .1f, .1f}},
+        Vertex{{0.5f, 0.5f, 0.5f}, {.8f, .1f, .1f}},
+
+        // Front face
+        Vertex{{-0.5f, -0.5f, 0.5f}, {.1f, .1f, .8f}},
+        Vertex{{0.5f, 0.5f, 0.5f}, {.1f, .1f, .8f}},
+        Vertex{{-0.5f, 0.5f, 0.5f}, {.1f, .1f, .8f}},
+        Vertex{{-0.5f, -0.5f, 0.5f}, {.1f, .1f, .8f}},
+        Vertex{{0.5f, -0.5f, 0.5f}, {.1f, .1f, .8f}},
+        Vertex{{0.5f, 0.5f, 0.5f}, {.1f, .1f, .8f}},
+
+        // Back face
+        Vertex{{-0.5f, -0.5f, -0.5f}, {.1f, .8f, .1f}},
+        Vertex{{0.5f, 0.5f, -0.5f}, {.1f, .8f, .1f}},
+        Vertex{{-0.5f, 0.5f, -0.5f}, {.1f, .8f, .1f}},
+        Vertex{{-0.5f, -0.5f, -0.5f}, {.1f, .8f, .1f}},
+        Vertex{{0.5f, -0.5f, -0.5f}, {.1f, .8f, .1f}},
+        Vertex{{0.5f, 0.5f, -0.5f}, {.1f, .8f, .1f}},
+    };
+
+    for (auto &vertex : vertices)
+        vertex.position += offset;
+
+    auto model = std::make_unique<Model>(device);
+    model->loadFromData(vertices);
+
+    return std::move(model);
+}
+
 void fl::Model::createVertexBuffers(const VertexArray &vertices)
 {
     vertexCount = static_cast<uint32_t>(vertices.size());

@@ -3,7 +3,6 @@
 #include "System/Core/Window.hpp"
 #include "System/Core/Device.hpp"
 #include "Graphics/Rendering/Drawable.hpp"
-#include "System/Memory/Alignment.hpp"
 #include "System/Rendering/Renderer.hpp"
 #include "System/Rendering/Systems/RenderSystem.hpp"
 

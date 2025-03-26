@@ -1,7 +1,8 @@
 #include "System/Rendering/Renderer.hpp"
 
 fl::Renderer::Renderer(Device &device, Window &window, const Color &clear_color)
-    : device(device), window(window), clearColor(clear_color), currentImageIndex(0), frameInProgress(false)
+    : device(device), window(window), clearColor(clear_color), currentImageIndex(0), currentFrameIndex(0),
+      frameInProgress(false)
 {
     recreateSwapchain();
     createCommandBuffers();
@@ -65,6 +66,7 @@ void fl::Renderer::endFrame()
     }
 
     frameInProgress = false;
+    currentFrameIndex = (currentFrameIndex + 1) % Swapchain::MAX_FRAMES_IN_FLIGHT;
 }
 
 void fl::Renderer::beginRenderPass(VkCommandBuffer &command_buffer)
@@ -127,12 +129,19 @@ const bool fl::Renderer::isFrameInProgress() const
     return frameInProgress;
 }
 
+const int fl::Renderer::getCurrentFrameIndex() const
+{
+    assert(frameInProgress && "CANNOT GET CURRENT FRAME INDEX WHILE NO FRAME IS IN PROGRESS");
+
+    return currentFrameIndex;
+}
+
 VkCommandBuffer &fl::Renderer::getCurrentCommandBuffer()
 {
     assert(frameInProgress && "CANNOT GET CURRENT BUFFER WHILE NO FRAME IS IN PROGRESS");
-    assert(currentImageIndex < commandBuffers.size() && "CURRENT FRAME INDEX IS OUT OF BOUNDS");
+    assert(currentFrameIndex < commandBuffers.size() && "CURRENT FRAME INDEX IS OUT OF BOUNDS");
 
-    return commandBuffers.at(currentImageIndex);
+    return commandBuffers.at(currentFrameIndex);
 }
 
 VkRenderPass fl::Renderer::getRenderPass()
@@ -142,7 +151,7 @@ VkRenderPass fl::Renderer::getRenderPass()
 
 void fl::Renderer::createCommandBuffers()
 {
-    commandBuffers.resize(swapchain->getImageCount());
+    commandBuffers.resize(Swapchain::MAX_FRAMES_IN_FLIGHT);
 
     VkCommandBufferAllocateInfo alloc_info = {};
     alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -183,13 +192,8 @@ void fl::Renderer::recreateSwapchain()
         std::shared_ptr<Swapchain> old_swapchain = std::move(swapchain);
         swapchain = std::make_unique<Swapchain>(device, window, old_swapchain);
 
-        if (swapchain->getImageCount() != commandBuffers.size())
-        {
-            if (commandBuffers.size() > 0)
-                freeCommandBuffers();
-
-            createCommandBuffers();
-        }
+        if (!old_swapchain->compatibleWith(*swapchain))
+            throw std::runtime_error("fl::Renderer::recreateSwapchain: SWAPCHAIN IMAGE OR DEPTH FORMAT HAS CHANGED");
     }
 
     // createPipeline();

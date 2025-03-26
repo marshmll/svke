@@ -51,68 +51,6 @@ fl::Swapchain::~Swapchain()
     }
 }
 
-VkSwapchainKHR fl::Swapchain::getHandle()
-{
-    return swapchain;
-}
-
-VkFramebuffer fl::Swapchain::getFramebuffer(const int index)
-{
-    return framebuffers[index];
-}
-
-VkRenderPass fl::Swapchain::getRenderPass()
-{
-    return renderPass;
-}
-
-VkImageView fl::Swapchain::getImageView(const int index)
-{
-    return imageViews[index];
-}
-
-const size_t fl::Swapchain::getImageCount()
-{
-    return images.size();
-}
-
-VkFormat fl::Swapchain::getImageFormat()
-{
-    return imageFormat;
-}
-
-VkExtent2D fl::Swapchain::getExtent()
-{
-    return extent;
-}
-
-const float fl::Swapchain::extentAspectRatio()
-{
-    return static_cast<float>(extent.width) / static_cast<float>(extent.height);
-}
-
-const uint32_t fl::Swapchain::getWidth()
-{
-    return extent.width;
-}
-
-const uint32_t fl::Swapchain::getHeight()
-{
-    return extent.height;
-}
-
-VkResult fl::Swapchain::acquireNextImage(uint32_t &image_index)
-{
-    vkWaitForFences(device.getLogicalDevice(), 1, &inFlightFences[currentFrame], VK_TRUE,
-                    std::numeric_limits<uint64_t>::max());
-
-    VkResult result = vkAcquireNextImageKHR(device.getLogicalDevice(), swapchain, std::numeric_limits<uint64_t>::max(),
-                                            imageAvailableSemaphores[currentFrame], // must be a not signaled semaphore
-                                            VK_NULL_HANDLE, &image_index);
-
-    return result;
-}
-
 VkResult fl::Swapchain::submitCommandBuffers(const VkCommandBuffer &buffers, uint32_t &image_index)
 {
     if (imagesInFlight[image_index] != VK_NULL_HANDLE)
@@ -158,6 +96,84 @@ VkResult fl::Swapchain::submitCommandBuffers(const VkCommandBuffer &buffers, uin
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 
     return result;
+}
+
+VkResult fl::Swapchain::acquireNextImage(uint32_t &image_index)
+{
+    vkWaitForFences(device.getLogicalDevice(), 1, &inFlightFences[currentFrame], VK_TRUE,
+                    std::numeric_limits<uint64_t>::max());
+
+    VkResult result = vkAcquireNextImageKHR(device.getLogicalDevice(), swapchain, std::numeric_limits<uint64_t>::max(),
+                                            imageAvailableSemaphores[currentFrame], // must be a not signaled semaphore
+                                            VK_NULL_HANDLE, &image_index);
+
+    return result;
+}
+
+VkFormat fl::Swapchain::findDepthFormat()
+{
+    return device.findSupportedFormat({VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
+                                      VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+}
+
+const bool fl::Swapchain::compatibleWith(Swapchain &other) const
+{
+    return this->imageFormat == other.getImageFormat() && this->depthFormat == other.getDepthFormat();
+}
+
+VkSwapchainKHR fl::Swapchain::getHandle()
+{
+    return swapchain;
+}
+
+VkFramebuffer fl::Swapchain::getFramebuffer(const int index)
+{
+    return framebuffers[index];
+}
+
+VkRenderPass fl::Swapchain::getRenderPass()
+{
+    return renderPass;
+}
+
+VkImageView fl::Swapchain::getImageView(const int index)
+{
+    return imageViews[index];
+}
+
+const size_t fl::Swapchain::getImageCount()
+{
+    return images.size();
+}
+
+VkFormat fl::Swapchain::getImageFormat()
+{
+    return imageFormat;
+}
+
+VkFormat fl::Swapchain::getDepthFormat()
+{
+    return depthFormat;
+}
+
+VkExtent2D fl::Swapchain::getExtent()
+{
+    return extent;
+}
+
+const float fl::Swapchain::extentAspectRatio()
+{
+    return static_cast<float>(extent.width) / static_cast<float>(extent.height);
+}
+
+const uint32_t fl::Swapchain::getWidth()
+{
+    return extent.width;
+}
+
+const uint32_t fl::Swapchain::getHeight()
+{
+    return extent.height;
 }
 
 void fl::Swapchain::init()
@@ -349,7 +365,7 @@ void fl::Swapchain::createFramebuffers()
 
 void fl::Swapchain::createDepthResources()
 {
-    VkFormat depth_format = findDepthFormat();
+    depthFormat = findDepthFormat();
     VkExtent2D swapchainExtent = getExtent();
 
     depthImages.resize(getImageCount());
@@ -366,7 +382,7 @@ void fl::Swapchain::createDepthResources()
         image_info.extent.depth = 1;
         image_info.mipLevels = 1;
         image_info.arrayLayers = 1;
-        image_info.format = depth_format;
+        image_info.format = depthFormat;
         image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
         image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         image_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
@@ -381,7 +397,7 @@ void fl::Swapchain::createDepthResources()
         view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         view_info.image = depthImages[i];
         view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        view_info.format = depth_format;
+        view_info.format = depthFormat;
         view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
         view_info.subresourceRange.baseMipLevel = 0;
         view_info.subresourceRange.levelCount = 1;
@@ -478,10 +494,4 @@ VkExtent2D fl::Swapchain::chooseExtent(const VkSurfaceCapabilitiesKHR &capabilit
 
         return actual_extent;
     }
-}
-
-VkFormat fl::Swapchain::findDepthFormat()
-{
-    return device.findSupportedFormat({VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
-                                      VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }

@@ -26,6 +26,14 @@ class Swapchain
     Swapchain(const Swapchain &) = delete;
     Swapchain &operator=(const Swapchain &) = delete;
 
+    VkResult submitCommandBuffers(const VkCommandBuffer &buffers, uint32_t &image_index);
+
+    VkResult acquireNextImage(uint32_t &image_index);
+
+    VkFormat findDepthFormat();
+
+    const bool compatibleWith(Swapchain &other) const;
+
     VkSwapchainKHR getHandle();
 
     VkFramebuffer getFramebuffer(const int index);
@@ -38,6 +46,8 @@ class Swapchain
 
     VkFormat getImageFormat();
 
+    VkFormat getDepthFormat();
+
     VkExtent2D getExtent();
 
     const uint32_t getWidth();
@@ -46,17 +56,12 @@ class Swapchain
 
     const float extentAspectRatio();
 
-    VkFormat findDepthFormat();
-
-    VkResult acquireNextImage(uint32_t &image_index);
-
-    VkResult submitCommandBuffers(const VkCommandBuffer &buffers, uint32_t &image_index);
-
   private:
     Device &device;
     Window &window;
 
     VkFormat imageFormat;
+    VkFormat depthFormat;
     VkExtent2D extent;
 
     std::vector<VkFramebuffer> framebuffers;
