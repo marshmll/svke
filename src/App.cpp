@@ -28,7 +28,8 @@ void vk::App::run()
         const float aspect_ratio = renderer->getAspectRatio();
         camera.setPerspectiveProjection(glm::radians(45.f), aspect_ratio, .1f, 10.f);
 
-        const float dt = delta_clk.restart();
+        const float dt = delta_clk.getElapsedTimeAsSeconds();
+        delta_clk.restart();
 
         camera_controller.moveInPlaneXZ(dt, viewer);
         camera.setViewYXZ(viewer.getTranslation(), viewer.getRotation());

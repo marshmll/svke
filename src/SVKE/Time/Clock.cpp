@@ -5,12 +5,9 @@ vk::Clock::Clock()
     restart();
 }
 
-const float vk::Clock::restart()
+void vk::Clock::restart()
 {
-    const float elapsed = getElapsedTimeAsSeconds();
     startTPoint = std::chrono::steady_clock::now();
-
-    return elapsed;
 }
 
 const float vk::Clock::getElapsedTimeAsSeconds()

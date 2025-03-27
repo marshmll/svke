@@ -9,7 +9,7 @@ class Clock
   public:
     Clock();
 
-    const float restart();
+    void restart();
 
     [[nodiscard]]
     const float getElapsedTimeAsSeconds();
