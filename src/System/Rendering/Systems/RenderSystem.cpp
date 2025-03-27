@@ -16,17 +16,19 @@ void fl::RenderSystem::render(VkCommandBuffer &command_buffer, std::vector<Drawa
 {
     pipeline->bind(command_buffer);
 
+    auto projection_view = camera.getProjectionMatrix() * camera.getViewMatrix();
+
     for (auto &drawable : drawables)
     {
         auto rot = drawable.getRotation();
         rot.x = glm::mod(rot.x + 0.0005f, glm::two_pi<float>());
         rot.y = glm::mod(rot.y + 0.001f, glm::two_pi<float>());
-        rot.z = glm::mod(rot.z + 0.0015f, glm::two_pi<float>());
+        // rot.z = glm::mod(rot.z + 0.0015f, glm::two_pi<float>());
         drawable.setRotation(rot);
 
         PushConstantData push = {};
         push.color = drawable.getColor().toVec3();
-        push.transform = camera.getProjectionMatrix() * drawable.transform();
+        push.transform = projection_view * drawable.transform();
 
         vkCmdPushConstants(command_buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
                            sizeof(PushConstantData), &push);

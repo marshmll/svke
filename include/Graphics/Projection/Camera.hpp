@@ -23,9 +23,19 @@ class Camera
 
     void setPerspectiveProjection(const float fovy, const float aspect_ratio, const float near, const float far);
 
+    void setViewDirection(const glm::vec3 &position, const glm::vec3 &direction,
+                          const glm::vec3 &up = {0.f, -1.f, 0.f});
+
+    void setViewTarget(const glm::vec3 &position, const glm::vec3 &target, const glm::vec3 &up = {0.f, -1.f, 0.f});
+
+    void setViewYXZ(const glm::vec3 &position, const glm::vec3 &rotation);
+
     const glm::mat4 &getProjectionMatrix() const;
+
+    const glm::mat4 &getViewMatrix() const;
 
   private:
     glm::mat4 projectionMatrix;
+    glm::mat4 viewMatrix;
 };
 } // namespace fl

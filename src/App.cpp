@@ -16,6 +16,8 @@ void fl::App::run()
 {
     Camera camera;
     RenderSystem render_system(*device, *renderer);
+    // camera.setViewDirection({0.f, 0.f, 0.f}, {.5, 0.f, 1.f});
+    camera.setViewTarget({-1.f, -2.f, 2.f}, {0.f, 0.f, 2.5f});
 
     while (!window->shouldClose())
     {
@@ -40,7 +42,7 @@ void fl::App::run()
 
 void fl::App::createWindow()
 {
-    window = std::make_unique<Window>(600, 600, "Flare");
+    window = std::make_unique<Window>(846, 484, "Flare");
 }
 
 void fl::App::createDevice()
@@ -59,7 +61,7 @@ void fl::App::loadDrawables()
 
     Drawable cube;
     cube.setModel(model);
-    cube.setTranslation({0.f, 0.f, 1.f});
+    cube.setTranslation({0.f, 0.f, 2.5f});
     cube.setScale({0.5f, 0.5f, 0.5f});
     drawables.push_back(std::move(cube));
 }
