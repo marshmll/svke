@@ -1,9 +1,10 @@
 #pragma once
 
+#include "Graphics/Projection/Camera.hpp"
+#include "Graphics/Rendering/Drawable.hpp"
 #include "System/Core/Device.hpp"
 #include "System/Core/Pipeline.hpp"
 #include "System/Rendering/Renderer.hpp"
-#include "Graphics/Rendering/Drawable.hpp"
 #include "System/Memory/Alignment.hpp"
 
 #ifndef GLM_FORCE_RADIANS
@@ -33,7 +34,7 @@ class RenderSystem
 
     ~RenderSystem();
 
-    void render(VkCommandBuffer &command_buffer, std::vector<Drawable> &drawables);
+    void render(VkCommandBuffer &command_buffer, std::vector<Drawable> &drawables, const Camera &camera);
 
   private:
     Device &device;

@@ -42,6 +42,8 @@ class Renderer
 
     VkRenderPass getRenderPass();
 
+    const float getAspectRatio() const;
+
   private:
     Device &device;
     Window &window;

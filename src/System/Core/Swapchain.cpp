@@ -161,7 +161,7 @@ VkExtent2D fl::Swapchain::getExtent()
     return extent;
 }
 
-const float fl::Swapchain::extentAspectRatio()
+const float fl::Swapchain::getExtentAspectRatio()
 {
     return static_cast<float>(extent.width) / static_cast<float>(extent.height);
 }

@@ -149,6 +149,11 @@ VkRenderPass fl::Renderer::getRenderPass()
     return swapchain->getRenderPass();
 }
 
+const float fl::Renderer::getAspectRatio() const
+{
+    return swapchain->getExtentAspectRatio();
+}
+
 void fl::Renderer::createCommandBuffers()
 {
     commandBuffers.resize(Swapchain::MAX_FRAMES_IN_FLIGHT);

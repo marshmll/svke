@@ -54,7 +54,7 @@ class Swapchain
 
     const uint32_t getHeight();
 
-    const float extentAspectRatio();
+    const float getExtentAspectRatio();
 
   private:
     Device &device;
