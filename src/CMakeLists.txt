@@ -1,3 +1,3 @@
 file(GLOB_RECURSE SOURCES ./*.cpp)
 
-target_sources(flare PRIVATE ${SOURCES})
+target_sources(svke PRIVATE ${SOURCES})

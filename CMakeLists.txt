@@ -1,21 +1,21 @@
 cmake_minimum_required(VERSION 3.21)
-project(flare LANGUAGES CXX C)
+project(svke LANGUAGES CXX C)
 
-add_executable(flare src/main.cpp)
+add_executable(svke src/main.cpp)
 add_subdirectory(src/)
 add_subdirectory(externals/glfw)
 add_subdirectory(externals/glm)
 
-target_include_directories(flare PRIVATE
+target_include_directories(svke PRIVATE
     include/
     externals/glfw
     externals/glm
     externals/VulkanMemoryAllocator
 )
 
-target_compile_features(flare PRIVATE cxx_std_17 c_std_99)
+target_compile_features(svke PRIVATE cxx_std_17 c_std_99)
 
-target_link_libraries(flare PRIVATE vulkan glfw glm shaderc)
+target_link_libraries(svke PRIVATE vulkan glfw glm shaderc)
 
 add_custom_target(copy_assets
     COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
@@ -24,6 +24,6 @@ add_custom_target(copy_assets
     COMMENT "Copying shaders folder"
 )
 
-add_dependencies(flare copy_assets)
+add_dependencies(svke copy_assets)
 
-install(TARGETS flare)
+install(TARGETS svke)

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Graphics/Projection/Camera.hpp"
-#include "Graphics/Rendering/Drawable.hpp"
-#include "System/Core/Window.hpp"
-#include "System/Core/Device.hpp"
-#include "System/Rendering/Renderer.hpp"
-#include "System/Rendering/Systems/RenderSystem.hpp"
+#include "SVKE/Rendering/Camera.hpp"
+#include "SVKE/Rendering/Resources/Drawable.hpp"
+#include "SVKE/Core/System/Window.hpp"
+#include "SVKE/Core/System/Device.hpp"
+#include "SVKE/Rendering/Systems/Renderer.hpp"
+#include "SVKE/Rendering/Systems/RenderSystem.hpp"
 
 namespace fl
 {
