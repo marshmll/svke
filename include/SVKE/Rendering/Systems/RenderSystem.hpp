@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SVKE/Rendering/Camera.hpp"
-#include "SVKE/Rendering/Resources/Drawable.hpp"
+#include "SVKE/Rendering/Resources/Object.hpp"
 #include "SVKE/Core/System/Device.hpp"
 #include "SVKE/Core/System/Pipeline.hpp"
 #include "SVKE/Rendering/Systems/Renderer.hpp"
@@ -34,7 +34,7 @@ class RenderSystem
 
     ~RenderSystem();
 
-    void render(VkCommandBuffer &command_buffer, std::vector<Drawable> &drawables, const Camera &camera);
+    void render(VkCommandBuffer &command_buffer, std::vector<Object> &objects, const Camera &camera);
 
   private:
     Device &device;

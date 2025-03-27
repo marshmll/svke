@@ -17,7 +17,7 @@
 
 namespace vk
 {
-class Drawable
+class Object
 {
   public:
     // struct Transform2dComponent
@@ -76,11 +76,11 @@ class Drawable
         }
     };
 
-    Drawable(const Color &color = COLOR_WHITE);
-    Drawable(std::shared_ptr<Model> &model, const Color &color = COLOR_WHITE);
-    Drawable &operator=(const Drawable &) = delete;
-    Drawable(Drawable &&) = default;
-    Drawable &operator=(Drawable &&) = default;
+    Object(const Color &color = COLOR_WHITE);
+    Object(std::shared_ptr<Model> &model, const Color &color = COLOR_WHITE);
+    Object &operator=(const Object &) = delete;
+    Object(Object &&) = default;
+    Object &operator=(Object &&) = default;
 
     void bind(VkCommandBuffer &command_buffer);
 

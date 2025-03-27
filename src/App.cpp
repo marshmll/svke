@@ -5,7 +5,7 @@ vk::App::App()
     createWindow();
     createDevice();
     createRenderer();
-    loadDrawables();
+    loadObjects();
 }
 
 vk::App::~App()
@@ -15,24 +15,29 @@ vk::App::~App()
 void vk::App::run()
 {
     Camera camera;
+    Object viewer;
+    Keyboard kb(*window);
+    KeyboardMovementController camera_controller(kb);
     RenderSystem render_system(*device, *renderer);
-    // camera.setViewDirection({0.f, 0.f, 0.f}, {.5, 0.f, 1.f});
-    camera.setViewTarget({-1.f, -2.f, 2.f}, {0.f, 0.f, 2.5f});
+    Clock delta_clk;
 
     while (!window->shouldClose())
     {
         window->pollEvents();
 
-        float aspect_ratio = renderer->getAspectRatio();
-
-        // camera.setOrthograpicProjection(-aspect_ratio, aspect_ratio, -1.f, 1.f, -1.f, 1.f);
+        const float aspect_ratio = renderer->getAspectRatio();
         camera.setPerspectiveProjection(glm::radians(45.f), aspect_ratio, .1f, 10.f);
+
+        const float dt = delta_clk.restart();
+
+        camera_controller.moveInPlaneXZ(dt, viewer);
+        camera.setViewYXZ(viewer.getTranslation(), viewer.getRotation());
 
         if (auto command_buffer = renderer->beginFrame())
         {
             renderer->beginRenderPass(command_buffer);
 
-            render_system.render(command_buffer, drawables, camera);
+            render_system.render(command_buffer, objects, camera);
 
             renderer->endRenderPass(command_buffer);
             renderer->endFrame();
@@ -55,13 +60,13 @@ void vk::App::createRenderer()
     renderer = std::make_unique<Renderer>(*device, *window);
 }
 
-void vk::App::loadDrawables()
+void vk::App::loadObjects()
 {
     std::shared_ptr<Model> model = Model::createCubeModel(*device, {0.f, 0.f, 0.f});
 
-    Drawable cube;
+    Object cube;
     cube.setModel(model);
     cube.setTranslation({0.f, 0.f, 2.5f});
     cube.setScale({0.5f, 0.5f, 0.5f});
-    drawables.push_back(std::move(cube));
+    objects.push_back(std::move(cube));
 }

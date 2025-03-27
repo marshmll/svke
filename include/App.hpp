@@ -1,11 +1,15 @@
 #pragma once
 
 #include "SVKE/Rendering/Camera.hpp"
-#include "SVKE/Rendering/Resources/Drawable.hpp"
+#include "SVKE/Rendering/Resources/Object.hpp"
 #include "SVKE/Core/System/Window.hpp"
 #include "SVKE/Core/System/Device.hpp"
 #include "SVKE/Rendering/Systems/Renderer.hpp"
 #include "SVKE/Rendering/Systems/RenderSystem.hpp"
+#include "SVKE/IO/KeyboardMovementController.hpp"
+#include "SVKE/Time/Clock.hpp"
+
+#include <chrono>
 
 namespace vk
 {
@@ -24,7 +28,7 @@ class App
     std::unique_ptr<Window> window;
     std::unique_ptr<Device> device;
     std::unique_ptr<Renderer> renderer;
-    std::vector<Drawable> drawables;
+    std::vector<Object> objects;
 
     void createWindow();
 
@@ -32,6 +36,6 @@ class App
 
     void createRenderer();
 
-    void loadDrawables();
+    void loadObjects();
 };
 } // namespace vk

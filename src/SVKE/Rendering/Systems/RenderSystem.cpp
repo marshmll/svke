@@ -12,29 +12,23 @@ vk::RenderSystem::~RenderSystem()
     vkDestroyPipelineLayout(device.getLogicalDevice(), pipelineLayout, nullptr);
 }
 
-void vk::RenderSystem::render(VkCommandBuffer &command_buffer, std::vector<Drawable> &drawables, const Camera &camera)
+void vk::RenderSystem::render(VkCommandBuffer &command_buffer, std::vector<Object> &objects, const Camera &camera)
 {
     pipeline->bind(command_buffer);
 
     auto projection_view = camera.getProjectionMatrix() * camera.getViewMatrix();
 
-    for (auto &drawable : drawables)
+    for (auto &object : objects)
     {
-        auto rot = drawable.getRotation();
-        rot.x = glm::mod(rot.x + 0.0005f, glm::two_pi<float>());
-        rot.y = glm::mod(rot.y + 0.001f, glm::two_pi<float>());
-        // rot.z = glm::mod(rot.z + 0.0015f, glm::two_pi<float>());
-        drawable.setRotation(rot);
-
         PushConstantData push = {};
-        push.color = drawable.getColor().toVec3();
-        push.transform = projection_view * drawable.transform();
+        push.color = object.getColor().toVec3();
+        push.transform = projection_view * object.transform();
 
         vkCmdPushConstants(command_buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
                            sizeof(PushConstantData), &push);
 
-        drawable.bind(command_buffer);
-        drawable.draw(command_buffer);
+        object.bind(command_buffer);
+        object.draw(command_buffer);
     }
 }
 
