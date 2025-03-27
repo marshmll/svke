@@ -1,9 +1,8 @@
 #include "SVKE/IO/MovementController.hpp"
 
 vk::MovementController::MovementController(Keyboard &keyboard, Mouse &mouse)
-    : keyboard(keyboard), mouse(mouse), speed(1.f), sensitivity(2.f)
+    : keyboard(keyboard), mouse(mouse), speed(1.5f), sensitivity(2.f)
 {
-    mouse.resetCursorData();
 }
 
 void vk::MovementController::moveInPlaneXZ(const float dt, Object &object)

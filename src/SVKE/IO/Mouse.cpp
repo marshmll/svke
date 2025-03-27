@@ -29,13 +29,13 @@ void vk::Mouse::updateCursorData()
 
     if (mode == CursorMode::Disabled)
     {
-        if (prev_x >= 0.0)
+        if (prev_x != -1.0)
             data.deltaX = data.x - prev_x;
 
         else
             data.deltaX = 0.f;
 
-        if (prev_y >= 0.0)
+        if (prev_y != -1.0)
             data.deltaY = data.y - prev_y;
 
         else
