@@ -15,7 +15,7 @@
 
 #include <memory>
 
-namespace fl
+namespace vk
 {
 class Drawable
 {
@@ -115,4 +115,4 @@ class Drawable
     Color color;
     TransformComponent transformComponent;
 };
-} // namespace fl
+} // namespace vk

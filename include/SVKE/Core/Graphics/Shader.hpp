@@ -15,7 +15,7 @@
 #include <fstream>
 #include <stdexcept>
 
-namespace fl
+namespace vk
 {
 class Shader
 {
@@ -36,4 +36,4 @@ class Shader
 
     SPIRVBinary readShaderFile(const std::string &path);
 };
-} // namespace fl
+} // namespace vk

@@ -1,6 +1,6 @@
 #include "SVKE/Core/System/Window.hpp"
 
-fl::Window::Window(const int width, const int height, const std::string &title)
+vk::Window::Window(const int width, const int height, const std::string &title)
     : window(nullptr), width(width), height(height), title(title), framebufferResized(false)
 {
     glfwInit();
@@ -8,10 +8,10 @@ fl::Window::Window(const int width, const int height, const std::string &title)
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
     glfwSetWindowUserPointer(window, this);
-    glfwSetFramebufferSizeCallback(window, fl::Window::framebufferResizedCallback);
+    glfwSetFramebufferSizeCallback(window, vk::Window::framebufferResizedCallback);
 }
 
-fl::Window::~Window()
+vk::Window::~Window()
 {
     if (window)
         glfwDestroyWindow(window);
@@ -19,68 +19,68 @@ fl::Window::~Window()
     glfwTerminate();
 }
 
-const bool fl::Window::shouldClose() const
+const bool vk::Window::shouldClose() const
 {
     assert(window != nullptr && "WINDOW HANDLE IS NULL");
 
     return glfwWindowShouldClose(window);
 }
 
-void fl::Window::createSurface(VkInstance &instance, VkSurfaceKHR &surface)
+void vk::Window::createSurface(VkInstance &instance, VkSurfaceKHR &surface)
 {
     glfwCreateWindowSurface(instance, window, nullptr, &surface);
 }
 
-void fl::Window::pollEvents()
+void vk::Window::pollEvents()
 {
     assert(window != nullptr && "WINDOW HANDLE IS NULL");
 
     glfwPollEvents();
 }
 
-GLFWwindow *&fl::Window::getHandle()
+GLFWwindow *&vk::Window::getHandle()
 {
     assert(window != nullptr && "WINDOW HANDLE IS NULL");
 
     return window;
 }
 
-const uint32_t fl::Window::getWidth() const
+const uint32_t vk::Window::getWidth() const
 {
     return static_cast<uint32_t>(width);
 }
 
-const uint32_t fl::Window::getHeight() const
+const uint32_t vk::Window::getHeight() const
 {
     return static_cast<uint32_t>(width);
 }
 
-VkExtent2D fl::Window::getExtent() const
+VkExtent2D vk::Window::getExtent() const
 {
     return {static_cast<uint32_t>(width), static_cast<uint32_t>(height)};
 }
 
-const bool fl::Window::wasResized() const
+const bool vk::Window::wasResized() const
 {
     return framebufferResized;
 }
 
-void fl::Window::setResized(const bool resized)
+void vk::Window::setResized(const bool resized)
 {
     framebufferResized = resized;
 }
 
-void fl::Window::setWidth(uint32_t width)
+void vk::Window::setWidth(uint32_t width)
 {
     this->width = width;
 }
 
-void fl::Window::setHeight(uint32_t height)
+void vk::Window::setHeight(uint32_t height)
 {
     this->height = height;
 }
 
-void fl::Window::framebufferResizedCallback(GLFWwindow *window, int width, int height)
+void vk::Window::framebufferResizedCallback(GLFWwindow *window, int width, int height)
 {
     Window *pWindow = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
 

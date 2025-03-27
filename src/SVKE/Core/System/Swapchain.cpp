@@ -1,11 +1,11 @@
 #include "SVKE/Core/System/Swapchain.hpp"
 
-fl::Swapchain::Swapchain(Device &device, Window &window) : device(device), window(window), currentFrame(0)
+vk::Swapchain::Swapchain(Device &device, Window &window) : device(device), window(window), currentFrame(0)
 {
     init();
 }
 
-fl::Swapchain::Swapchain(Device &device, Window &window, std::shared_ptr<Swapchain> &previous)
+vk::Swapchain::Swapchain(Device &device, Window &window, std::shared_ptr<Swapchain> &previous)
     : device(device), window(window), oldSwapchain(previous), currentFrame(0)
 {
     init();
@@ -14,7 +14,7 @@ fl::Swapchain::Swapchain(Device &device, Window &window, std::shared_ptr<Swapcha
     oldSwapchain = nullptr;
 }
 
-fl::Swapchain::~Swapchain()
+vk::Swapchain::~Swapchain()
 {
     vkDeviceWaitIdle(device.getLogicalDevice());
 
@@ -51,7 +51,7 @@ fl::Swapchain::~Swapchain()
     }
 }
 
-VkResult fl::Swapchain::submitCommandBuffers(const VkCommandBuffer &buffers, uint32_t &image_index)
+VkResult vk::Swapchain::submitCommandBuffers(const VkCommandBuffer &buffers, uint32_t &image_index)
 {
     if (imagesInFlight[image_index] != VK_NULL_HANDLE)
     {
@@ -77,7 +77,7 @@ VkResult fl::Swapchain::submitCommandBuffers(const VkCommandBuffer &buffers, uin
 
     vkResetFences(device.getLogicalDevice(), 1, &inFlightFences[currentFrame]);
     if (vkQueueSubmit(device.getGraphicsQueue(), 1, &submit_info, inFlightFences[currentFrame]) != VK_SUCCESS)
-        throw std::runtime_error("fl::Swapchain::submitCommandBuffers: FAILED TO SUBMIT COMMAND BUFFER");
+        throw std::runtime_error("vk::Swapchain::submitCommandBuffers: FAILED TO SUBMIT COMMAND BUFFER");
 
     VkPresentInfoKHR present_info = {};
     present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -98,7 +98,7 @@ VkResult fl::Swapchain::submitCommandBuffers(const VkCommandBuffer &buffers, uin
     return result;
 }
 
-VkResult fl::Swapchain::acquireNextImage(uint32_t &image_index)
+VkResult vk::Swapchain::acquireNextImage(uint32_t &image_index)
 {
     vkWaitForFences(device.getLogicalDevice(), 1, &inFlightFences[currentFrame], VK_TRUE,
                     std::numeric_limits<uint64_t>::max());
@@ -110,73 +110,73 @@ VkResult fl::Swapchain::acquireNextImage(uint32_t &image_index)
     return result;
 }
 
-VkFormat fl::Swapchain::findDepthFormat()
+VkFormat vk::Swapchain::findDepthFormat()
 {
     return device.findSupportedFormat({VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
                                       VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
 
-const bool fl::Swapchain::compatibleWith(Swapchain &other) const
+const bool vk::Swapchain::compatibleWith(Swapchain &other) const
 {
     return this->imageFormat == other.getImageFormat() && this->depthFormat == other.getDepthFormat();
 }
 
-VkSwapchainKHR fl::Swapchain::getHandle()
+VkSwapchainKHR vk::Swapchain::getHandle()
 {
     return swapchain;
 }
 
-VkFramebuffer fl::Swapchain::getFramebuffer(const int index)
+VkFramebuffer vk::Swapchain::getFramebuffer(const int index)
 {
     return framebuffers[index];
 }
 
-VkRenderPass fl::Swapchain::getRenderPass()
+VkRenderPass vk::Swapchain::getRenderPass()
 {
     return renderPass;
 }
 
-VkImageView fl::Swapchain::getImageView(const int index)
+VkImageView vk::Swapchain::getImageView(const int index)
 {
     return imageViews[index];
 }
 
-const size_t fl::Swapchain::getImageCount()
+const size_t vk::Swapchain::getImageCount()
 {
     return images.size();
 }
 
-VkFormat fl::Swapchain::getImageFormat()
+VkFormat vk::Swapchain::getImageFormat()
 {
     return imageFormat;
 }
 
-VkFormat fl::Swapchain::getDepthFormat()
+VkFormat vk::Swapchain::getDepthFormat()
 {
     return depthFormat;
 }
 
-VkExtent2D fl::Swapchain::getExtent()
+VkExtent2D vk::Swapchain::getExtent()
 {
     return extent;
 }
 
-const float fl::Swapchain::getExtentAspectRatio()
+const float vk::Swapchain::getExtentAspectRatio()
 {
     return static_cast<float>(extent.width) / static_cast<float>(extent.height);
 }
 
-const uint32_t fl::Swapchain::getWidth()
+const uint32_t vk::Swapchain::getWidth()
 {
     return extent.width;
 }
 
-const uint32_t fl::Swapchain::getHeight()
+const uint32_t vk::Swapchain::getHeight()
 {
     return extent.height;
 }
 
-void fl::Swapchain::init()
+void vk::Swapchain::init()
 {
     createSwapchain();
     createImageViews();
@@ -186,7 +186,7 @@ void fl::Swapchain::init()
     createSyncObjects();
 }
 
-void fl::Swapchain::createSwapchain()
+void vk::Swapchain::createSwapchain()
 {
     Device::SwapchainSupportDetails swapchainSupport = device.getSwapchainSupport();
 
@@ -237,7 +237,7 @@ void fl::Swapchain::createSwapchain()
 
     if (vkCreateSwapchainKHR(device.getLogicalDevice(), &swapchain_info, nullptr, &swapchain) != VK_SUCCESS)
     {
-        throw std::runtime_error("fl::Swapchain::createSwapchain: FAILED TO CREATE SWAPCHAIN");
+        throw std::runtime_error("vk::Swapchain::createSwapchain: FAILED TO CREATE SWAPCHAIN");
     }
 
     // we only specified a minimum number of images in the swap chain, so the implementation is
@@ -252,7 +252,7 @@ void fl::Swapchain::createSwapchain()
     this->extent = extent;
 }
 
-void fl::Swapchain::createImageViews()
+void vk::Swapchain::createImageViews()
 {
     imageViews.resize(images.size());
 
@@ -271,12 +271,12 @@ void fl::Swapchain::createImageViews()
 
         if (vkCreateImageView(device.getLogicalDevice(), &view_info, nullptr, &imageViews[i]) != VK_SUCCESS)
         {
-            throw std::runtime_error("fl::Swapchain::createSwapchain: FAILED TO CREATE TEXTURE IMAGE VIEW");
+            throw std::runtime_error("vk::Swapchain::createSwapchain: FAILED TO CREATE TEXTURE IMAGE VIEW");
         }
     }
 }
 
-void fl::Swapchain::createRenderPass()
+void vk::Swapchain::createRenderPass()
 {
     VkAttachmentDescription depth_attachment{};
     depth_attachment.format = findDepthFormat();
@@ -334,11 +334,11 @@ void fl::Swapchain::createRenderPass()
 
     if (vkCreateRenderPass(device.getLogicalDevice(), &render_pass_info, nullptr, &renderPass) != VK_SUCCESS)
     {
-        throw std::runtime_error("fl::Swapchain::createRenderPass: FAILED TO CREATE RENDER PASS");
+        throw std::runtime_error("vk::Swapchain::createRenderPass: FAILED TO CREATE RENDER PASS");
     }
 }
 
-void fl::Swapchain::createFramebuffers()
+void vk::Swapchain::createFramebuffers()
 {
     framebuffers.resize(getImageCount());
 
@@ -358,12 +358,12 @@ void fl::Swapchain::createFramebuffers()
 
         if (vkCreateFramebuffer(device.getLogicalDevice(), &framebuffer_info, nullptr, &framebuffers[i]) != VK_SUCCESS)
         {
-            throw std::runtime_error("fl::Swapchain::createFramebuffers: FAILED TO CREATE FRAMEBUFFERS");
+            throw std::runtime_error("vk::Swapchain::createFramebuffers: FAILED TO CREATE FRAMEBUFFERS");
         }
     }
 }
 
-void fl::Swapchain::createDepthResources()
+void vk::Swapchain::createDepthResources()
 {
     depthFormat = findDepthFormat();
     VkExtent2D swapchainExtent = getExtent();
@@ -406,12 +406,12 @@ void fl::Swapchain::createDepthResources()
 
         if (vkCreateImageView(device.getLogicalDevice(), &view_info, nullptr, &depthImageViews[i]) != VK_SUCCESS)
         {
-            throw std::runtime_error("fl::Swapchain::createDepthResources: FAILED TO CREATE TEXTURE IMAGE VIEW");
+            throw std::runtime_error("vk::Swapchain::createDepthResources: FAILED TO CREATE TEXTURE IMAGE VIEW");
         }
     }
 }
 
-void fl::Swapchain::createSyncObjects()
+void vk::Swapchain::createSyncObjects()
 {
     imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -433,12 +433,12 @@ void fl::Swapchain::createSyncObjects()
                 VK_SUCCESS ||
             vkCreateFence(device.getLogicalDevice(), &fence_info, nullptr, &inFlightFences[i]) != VK_SUCCESS)
         {
-            throw std::runtime_error("fl::Swapchain::createSyncObjects: FAILED TO CREATE SYNCRONIZATION OBJECTS");
+            throw std::runtime_error("vk::Swapchain::createSyncObjects: FAILED TO CREATE SYNCRONIZATION OBJECTS");
         }
     }
 }
 
-VkSurfaceFormatKHR fl::Swapchain::chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &available_formats)
+VkSurfaceFormatKHR vk::Swapchain::chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &available_formats)
 {
     for (const auto &format : available_formats)
     {
@@ -451,7 +451,7 @@ VkSurfaceFormatKHR fl::Swapchain::chooseSurfaceFormat(const std::vector<VkSurfac
     return available_formats[0];
 }
 
-VkPresentModeKHR fl::Swapchain::choosePresentMode(const std::vector<VkPresentModeKHR> &available_present_modes)
+VkPresentModeKHR vk::Swapchain::choosePresentMode(const std::vector<VkPresentModeKHR> &available_present_modes)
 {
     for (const auto &mode : available_present_modes)
     {
@@ -478,7 +478,7 @@ VkPresentModeKHR fl::Swapchain::choosePresentMode(const std::vector<VkPresentMod
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-VkExtent2D fl::Swapchain::chooseExtent(const VkSurfaceCapabilitiesKHR &capabilities)
+VkExtent2D vk::Swapchain::chooseExtent(const VkSurfaceCapabilitiesKHR &capabilities)
 {
     if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
     {

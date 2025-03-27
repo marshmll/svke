@@ -6,7 +6,7 @@
 
 int main()
 {
-    fl::App app = fl::App();
+    vk::App app = vk::App();
 
     try
     {

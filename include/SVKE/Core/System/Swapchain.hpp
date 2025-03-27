@@ -12,7 +12,7 @@
 #include <stdexcept>
 #include <memory>
 
-namespace fl
+namespace vk
 {
 class Swapchain
 {
@@ -102,4 +102,4 @@ class Swapchain
 
     VkExtent2D chooseExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 };
-} // namespace fl
+} // namespace vk

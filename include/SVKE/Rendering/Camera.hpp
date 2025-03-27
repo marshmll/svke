@@ -11,7 +11,7 @@
 #include <cassert>
 #include <limits>
 
-namespace fl
+namespace vk
 {
 class Camera
 {
@@ -38,4 +38,4 @@ class Camera
     glm::mat4 projectionMatrix;
     glm::mat4 viewMatrix;
 };
-} // namespace fl
+} // namespace vk

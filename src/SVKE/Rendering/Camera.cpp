@@ -1,10 +1,10 @@
 #include "SVKE/Rendering/Camera.hpp"
 
-fl::Camera::Camera() : projectionMatrix(1.f), viewMatrix(1.f)
+vk::Camera::Camera() : projectionMatrix(1.f), viewMatrix(1.f)
 {
 }
 
-void fl::Camera::setOrthograpicProjection(const float left, const float right, const float top, const float bottom,
+void vk::Camera::setOrthograpicProjection(const float left, const float right, const float top, const float bottom,
                                           const float near, const float far)
 {
     projectionMatrix = glm::mat4{1.f};
@@ -17,7 +17,7 @@ void fl::Camera::setOrthograpicProjection(const float left, const float right, c
     projectionMatrix[3][2] = -near / (far - near);
 }
 
-void fl::Camera::setPerspectiveProjection(const float fovy, const float aspect_ratio, const float near, const float far)
+void vk::Camera::setPerspectiveProjection(const float fovy, const float aspect_ratio, const float near, const float far)
 {
     assert(glm::abs(aspect_ratio - std::numeric_limits<float>::epsilon() > 0.f));
 
@@ -31,7 +31,7 @@ void fl::Camera::setPerspectiveProjection(const float fovy, const float aspect_r
     projectionMatrix[3][2] = -(far * near) / (far - near);
 }
 
-void fl::Camera::setViewDirection(const glm::vec3 &position, const glm::vec3 &direction, const glm::vec3 &up)
+void vk::Camera::setViewDirection(const glm::vec3 &position, const glm::vec3 &direction, const glm::vec3 &up)
 {
     const glm::vec3 w{glm::normalize(direction)};
     const glm::vec3 u{glm::normalize(glm::cross(w, up))};
@@ -66,12 +66,12 @@ void fl::Camera::setViewDirection(const glm::vec3 &position, const glm::vec3 &di
     // inverseViewMatrix[3][2] = position.z;
 }
 
-void fl::Camera::setViewTarget(const glm::vec3 &position, const glm::vec3 &target, const glm::vec3 &up)
+void vk::Camera::setViewTarget(const glm::vec3 &position, const glm::vec3 &target, const glm::vec3 &up)
 {
     setViewDirection(position, target - position, up);
 }
 
-void fl::Camera::setViewYXZ(const glm::vec3 &position, const glm::vec3 &rotation)
+void vk::Camera::setViewYXZ(const glm::vec3 &position, const glm::vec3 &rotation)
 {
     const float c3 = glm::cos(rotation.z);
     const float s3 = glm::sin(rotation.z);
@@ -111,12 +111,12 @@ void fl::Camera::setViewYXZ(const glm::vec3 &position, const glm::vec3 &rotation
     // inverseViewMatrix[3][2] = position.z;
 }
 
-const glm::mat4 &fl::Camera::getProjectionMatrix() const
+const glm::mat4 &vk::Camera::getProjectionMatrix() const
 {
     return projectionMatrix;
 }
 
-const glm::mat4 &fl::Camera::getViewMatrix() const
+const glm::mat4 &vk::Camera::getViewMatrix() const
 {
     return viewMatrix;
 }

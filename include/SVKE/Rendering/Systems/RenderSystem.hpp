@@ -17,7 +17,7 @@
 
 #include <array>
 
-namespace fl
+namespace vk
 {
 class RenderSystem
 {
@@ -53,4 +53,4 @@ class RenderSystem
 
     void createPipeline(VkRenderPass render_pass);
 };
-} // namespace fl
+} // namespace vk

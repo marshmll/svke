@@ -1,6 +1,6 @@
 #include "SVKE/Core/System/Pipeline.hpp"
 
-fl::Pipeline::Pipeline(Device &device, const std::string &vert_path, const std::string &frag_path) : device(device)
+vk::Pipeline::Pipeline(Device &device, const std::string &vert_path, const std::string &frag_path) : device(device)
 {
     Config config = {};
     defaultPipelineConfig(config);
@@ -11,7 +11,7 @@ fl::Pipeline::Pipeline(Device &device, const std::string &vert_path, const std::
     createGraphicsPipeline(config, vert_shader, frag_shader);
 }
 
-fl::Pipeline::Pipeline(Device &device, const std::string &vert_path, const std::string &frag_path, const Config &config)
+vk::Pipeline::Pipeline(Device &device, const std::string &vert_path, const std::string &frag_path, const Config &config)
     : device(device)
 {
     Shader vert_shader(device, vert_path);
@@ -20,7 +20,7 @@ fl::Pipeline::Pipeline(Device &device, const std::string &vert_path, const std::
     createGraphicsPipeline(config, vert_shader, frag_shader);
 }
 
-fl::Pipeline::Pipeline(Device &device, Shader &vert_shader, Shader &frag_shader) : device(device)
+vk::Pipeline::Pipeline(Device &device, Shader &vert_shader, Shader &frag_shader) : device(device)
 {
     Config config = {};
     defaultPipelineConfig(config);
@@ -28,24 +28,23 @@ fl::Pipeline::Pipeline(Device &device, Shader &vert_shader, Shader &frag_shader)
     createGraphicsPipeline(config, vert_shader, frag_shader);
 }
 
-fl::Pipeline::Pipeline(Device &device, Shader &vert_shader, Shader &frag_shader, const Config &config)
-    : device(device)
+vk::Pipeline::Pipeline(Device &device, Shader &vert_shader, Shader &frag_shader, const Config &config) : device(device)
 {
     createGraphicsPipeline(config, vert_shader, frag_shader);
 }
 
-fl::Pipeline::~Pipeline()
+vk::Pipeline::~Pipeline()
 {
     vkDeviceWaitIdle(device.getLogicalDevice());
     vkDestroyPipeline(device.getLogicalDevice(), graphicsPipeline, nullptr);
 }
 
-void fl::Pipeline::bind(VkCommandBuffer &command_buffer)
+void vk::Pipeline::bind(VkCommandBuffer &command_buffer)
 {
     vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 }
 
-void fl::Pipeline::defaultPipelineConfig(Config &config)
+void vk::Pipeline::defaultPipelineConfig(Config &config)
 {
     /* VIEWPORT -------------------------------------------------------------------------------------------- */
     config.viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -123,7 +122,7 @@ void fl::Pipeline::defaultPipelineConfig(Config &config)
     config.dynamicStateInfo.flags = 0;
 }
 
-void fl::Pipeline::createGraphicsPipeline(const Config &config, Shader &vert_shader, Shader &frag_shader)
+void vk::Pipeline::createGraphicsPipeline(const Config &config, Shader &vert_shader, Shader &frag_shader)
 {
     assert(config.pipelineLayout != VK_NULL_HANDLE && "PIPELINE LAYOUT WAS NOT PROVIDED OR IS A VK_NULL_HANDLE");
     assert(config.renderPass != VK_NULL_HANDLE && "PIPELINE RENDER PASS WAS NOT PROVIDED OR IS A VK_NULL_HANDLE");
@@ -176,5 +175,5 @@ void fl::Pipeline::createGraphicsPipeline(const Config &config, Shader &vert_sha
 
     if (vkCreateGraphicsPipelines(device.getLogicalDevice(), VK_NULL_HANDLE, 1, &pipeline_info, nullptr,
                                   &graphicsPipeline) != VK_SUCCESS)
-        throw std::runtime_error("fl::Pipeline::defaultPipelineConfig: FAILED TO CREATE GRAPHICS PIPELINE");
+        throw std::runtime_error("vk::Pipeline::defaultPipelineConfig: FAILED TO CREATE GRAPHICS PIPELINE");
 }

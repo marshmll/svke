@@ -15,7 +15,7 @@
 
 #include <array>
 
-namespace fl
+namespace vk
 {
 class Renderer
 {
@@ -63,4 +63,4 @@ class Renderer
 
     void recreateSwapchain();
 };
-} // namespace fl
+} // namespace vk

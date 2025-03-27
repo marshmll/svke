@@ -12,7 +12,7 @@
 #include <map>
 #include <optional>
 
-namespace fl
+namespace vk
 {
 class Device
 {
@@ -147,4 +147,4 @@ class Device
     static void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger,
                                               const VkAllocationCallbacks *pAllocator);
 };
-} // namespace fl
+} // namespace vk

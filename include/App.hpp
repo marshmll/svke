@@ -7,7 +7,7 @@
 #include "SVKE/Rendering/Systems/Renderer.hpp"
 #include "SVKE/Rendering/Systems/RenderSystem.hpp"
 
-namespace fl
+namespace vk
 {
 class App
 {
@@ -34,4 +34,4 @@ class App
 
     void loadDrawables();
 };
-} // namespace fl
+} // namespace vk

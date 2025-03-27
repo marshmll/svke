@@ -1,14 +1,14 @@
 #include "SVKE/Rendering/Resources/Drawable.hpp"
 
-fl::Drawable::Drawable(const Color &color) : color(color)
+vk::Drawable::Drawable(const Color &color) : color(color)
 {
 }
 
-fl::Drawable::Drawable(std::shared_ptr<Model> &model, const Color &color) : model(model), color(color)
+vk::Drawable::Drawable(std::shared_ptr<Model> &model, const Color &color) : model(model), color(color)
 {
 }
 
-void fl::Drawable::bind(VkCommandBuffer &command_buffer)
+void vk::Drawable::bind(VkCommandBuffer &command_buffer)
 {
     if (!model)
         return;
@@ -16,7 +16,7 @@ void fl::Drawable::bind(VkCommandBuffer &command_buffer)
     model->bind(command_buffer);
 }
 
-void fl::Drawable::draw(VkCommandBuffer &command_buffer)
+void vk::Drawable::draw(VkCommandBuffer &command_buffer)
 {
     if (!model)
         return;
@@ -24,62 +24,62 @@ void fl::Drawable::draw(VkCommandBuffer &command_buffer)
     model->draw(command_buffer);
 }
 
-glm::mat4 fl::Drawable::transform()
+glm::mat4 vk::Drawable::transform()
 {
     return transformComponent.mat4();
 }
 
-const glm::vec3 &fl::Drawable::getTranslation() const
+const glm::vec3 &vk::Drawable::getTranslation() const
 {
     return transformComponent.translation;
 }
 
-const glm::vec3 &fl::Drawable::getScale() const
+const glm::vec3 &vk::Drawable::getScale() const
 {
     return transformComponent.scale;
 }
 
-const glm::vec3 &fl::Drawable::getRotation() const
+const glm::vec3 &vk::Drawable::getRotation() const
 {
     return transformComponent.rotation;
 }
 
-const fl::Color &fl::Drawable::getColor() const
+const vk::Color &vk::Drawable::getColor() const
 {
     return color;
 }
 
-const std::shared_ptr<fl::Model> &fl::Drawable::getModel() const
+const std::shared_ptr<vk::Model> &vk::Drawable::getModel() const
 {
     return model;
 }
 
-const fl::Drawable::TransformComponent &fl::Drawable::getTransformComponent() const
+const vk::Drawable::TransformComponent &vk::Drawable::getTransformComponent() const
 {
     return transformComponent;
 }
 
-void fl::Drawable::setModel(std::shared_ptr<Model> &model)
+void vk::Drawable::setModel(std::shared_ptr<Model> &model)
 {
     this->model = model;
 }
 
-void fl::Drawable::setColor(const Color &color)
+void vk::Drawable::setColor(const Color &color)
 {
     this->color = color;
 }
 
-void fl::Drawable::setTranslation(const glm::vec3 &translation)
+void vk::Drawable::setTranslation(const glm::vec3 &translation)
 {
     transformComponent.translation = translation;
 }
 
-void fl::Drawable::setScale(const glm::vec3 &scale)
+void vk::Drawable::setScale(const glm::vec3 &scale)
 {
     transformComponent.scale = scale;
 }
 
-void fl::Drawable::setRotation(const glm::vec3 &rotation)
+void vk::Drawable::setRotation(const glm::vec3 &rotation)
 {
     transformComponent.rotation = rotation;
 }

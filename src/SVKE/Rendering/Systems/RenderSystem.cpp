@@ -1,18 +1,18 @@
 #include "SVKE/Rendering/Systems/RenderSystem.hpp"
 
-fl::RenderSystem::RenderSystem(Device &device, Renderer &renderer) : device(device), pipelineLayout(VK_NULL_HANDLE)
+vk::RenderSystem::RenderSystem(Device &device, Renderer &renderer) : device(device), pipelineLayout(VK_NULL_HANDLE)
 {
     loadShaders();
     createPipelineLayout();
     createPipeline(renderer.getRenderPass());
 }
 
-fl::RenderSystem::~RenderSystem()
+vk::RenderSystem::~RenderSystem()
 {
     vkDestroyPipelineLayout(device.getLogicalDevice(), pipelineLayout, nullptr);
 }
 
-void fl::RenderSystem::render(VkCommandBuffer &command_buffer, std::vector<Drawable> &drawables, const Camera &camera)
+void vk::RenderSystem::render(VkCommandBuffer &command_buffer, std::vector<Drawable> &drawables, const Camera &camera)
 {
     pipeline->bind(command_buffer);
 
@@ -38,13 +38,13 @@ void fl::RenderSystem::render(VkCommandBuffer &command_buffer, std::vector<Drawa
     }
 }
 
-void fl::RenderSystem::loadShaders()
+void vk::RenderSystem::loadShaders()
 {
     vertShader = std::make_unique<Shader>(device, "shaders/vertex.spv");
     fragShader = std::make_unique<Shader>(device, "shaders/fragment.spv");
 }
 
-void fl::RenderSystem::createPipelineLayout()
+void vk::RenderSystem::createPipelineLayout()
 {
     VkPushConstantRange push_constant_range = {};
     push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -60,10 +60,10 @@ void fl::RenderSystem::createPipelineLayout()
 
     if (vkCreatePipelineLayout(device.getLogicalDevice(), &pipeline_layout_info, nullptr, &pipelineLayout) !=
         VK_SUCCESS)
-        throw std::runtime_error("fl::RenderSystem::createPipelineLayout: FAILED TO CREATE PIPELINE LAYOUT");
+        throw std::runtime_error("vk::RenderSystem::createPipelineLayout: FAILED TO CREATE PIPELINE LAYOUT");
 }
 
-void fl::RenderSystem::createPipeline(VkRenderPass render_pass)
+void vk::RenderSystem::createPipeline(VkRenderPass render_pass)
 {
     assert(pipelineLayout != VK_NULL_HANDLE && "CANNOT CREATE PIPELINE BEFORE PIPELINE LAYOUT");
 

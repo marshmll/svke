@@ -17,7 +17,7 @@
 #include <vector>
 #include <cstddef>
 
-namespace fl
+namespace vk
 {
 struct Vertex;
 
@@ -56,4 +56,4 @@ struct Vertex
         return std::move(attribute_descriptions);
     }
 };
-} // namespace fl
+} // namespace vk

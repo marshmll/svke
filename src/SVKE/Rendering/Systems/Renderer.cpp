@@ -1,6 +1,6 @@
 #include "SVKE/Rendering/Systems/Renderer.hpp"
 
-fl::Renderer::Renderer(Device &device, Window &window, const Color &clear_color)
+vk::Renderer::Renderer(Device &device, Window &window, const Color &clear_color)
     : device(device), window(window), clearColor(clear_color), currentImageIndex(0), currentFrameIndex(0),
       frameInProgress(false)
 {
@@ -8,12 +8,12 @@ fl::Renderer::Renderer(Device &device, Window &window, const Color &clear_color)
     createCommandBuffers();
 }
 
-fl::Renderer::~Renderer()
+vk::Renderer::~Renderer()
 {
     freeCommandBuffers();
 }
 
-VkCommandBuffer fl::Renderer::beginFrame()
+VkCommandBuffer vk::Renderer::beginFrame()
 {
     assert(!frameInProgress && "CANNOT BEGIN FRAME WHEN ANOTHER FRAME IS IN PROGRESS");
 
@@ -26,7 +26,7 @@ VkCommandBuffer fl::Renderer::beginFrame()
     }
 
     if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
-        throw std::runtime_error("fl::Renderer::beginFrame: FAILED TO ACQUIRE SWAPCHAIN IMAGE");
+        throw std::runtime_error("vk::Renderer::beginFrame: FAILED TO ACQUIRE SWAPCHAIN IMAGE");
 
     frameInProgress = true;
     auto &command_buffer = getCurrentCommandBuffer();
@@ -37,12 +37,12 @@ VkCommandBuffer fl::Renderer::beginFrame()
     begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
     if (vkBeginCommandBuffer(command_buffer, &begin) != VK_SUCCESS)
-        throw std::runtime_error("fl::Renderer::beginFrame: FAILED TO BEGIN RECORDING COMMAND BUFFER");
+        throw std::runtime_error("vk::Renderer::beginFrame: FAILED TO BEGIN RECORDING COMMAND BUFFER");
 
     return command_buffer;
 }
 
-void fl::Renderer::endFrame()
+void vk::Renderer::endFrame()
 {
     assert(frameInProgress && "CANNOT END FRAME WHEN NO FRAME IS IN PROGRESS");
 
@@ -51,7 +51,7 @@ void fl::Renderer::endFrame()
     auto &command_buffer = getCurrentCommandBuffer();
 
     if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS)
-        throw std::runtime_error("fl::Renderer::endFrame: FAILED TO END COMMAND BUFFER");
+        throw std::runtime_error("vk::Renderer::endFrame: FAILED TO END COMMAND BUFFER");
 
     auto result = swapchain->submitCommandBuffers(command_buffer, currentImageIndex);
 
@@ -62,14 +62,14 @@ void fl::Renderer::endFrame()
     }
     else if (result != VK_SUCCESS)
     {
-        throw std::runtime_error("fl::Renderer::endFrame: FAILED TO PRESENT SWAPCHAIN IMAGE");
+        throw std::runtime_error("vk::Renderer::endFrame: FAILED TO PRESENT SWAPCHAIN IMAGE");
     }
 
     frameInProgress = false;
     currentFrameIndex = (currentFrameIndex + 1) % Swapchain::MAX_FRAMES_IN_FLIGHT;
 }
 
-void fl::Renderer::beginRenderPass(VkCommandBuffer &command_buffer)
+void vk::Renderer::beginRenderPass(VkCommandBuffer &command_buffer)
 {
     assert(frameInProgress && "CANNOT BEGIN RENDER PASS WHEN NO FRAME IS IN PROGRESS");
     assert(command_buffer == getCurrentCommandBuffer() &&
@@ -113,7 +113,7 @@ void fl::Renderer::beginRenderPass(VkCommandBuffer &command_buffer)
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 }
 
-void fl::Renderer::endRenderPass(VkCommandBuffer &command_buffer)
+void vk::Renderer::endRenderPass(VkCommandBuffer &command_buffer)
 {
     assert(frameInProgress && "CANNOT END RENDER PASS WHEN NO FRAME IS IN PROGRESS");
     assert(command_buffer == getCurrentCommandBuffer() &&
@@ -124,19 +124,19 @@ void fl::Renderer::endRenderPass(VkCommandBuffer &command_buffer)
     vkCmdEndRenderPass(command_buffer);
 }
 
-const bool fl::Renderer::isFrameInProgress() const
+const bool vk::Renderer::isFrameInProgress() const
 {
     return frameInProgress;
 }
 
-const int fl::Renderer::getCurrentFrameIndex() const
+const int vk::Renderer::getCurrentFrameIndex() const
 {
     assert(frameInProgress && "CANNOT GET CURRENT FRAME INDEX WHILE NO FRAME IS IN PROGRESS");
 
     return currentFrameIndex;
 }
 
-VkCommandBuffer &fl::Renderer::getCurrentCommandBuffer()
+VkCommandBuffer &vk::Renderer::getCurrentCommandBuffer()
 {
     assert(frameInProgress && "CANNOT GET CURRENT BUFFER WHILE NO FRAME IS IN PROGRESS");
     assert(currentFrameIndex < commandBuffers.size() && "CURRENT FRAME INDEX IS OUT OF BOUNDS");
@@ -144,17 +144,17 @@ VkCommandBuffer &fl::Renderer::getCurrentCommandBuffer()
     return commandBuffers.at(currentFrameIndex);
 }
 
-VkRenderPass fl::Renderer::getRenderPass()
+VkRenderPass vk::Renderer::getRenderPass()
 {
     return swapchain->getRenderPass();
 }
 
-const float fl::Renderer::getAspectRatio() const
+const float vk::Renderer::getAspectRatio() const
 {
     return swapchain->getExtentAspectRatio();
 }
 
-void fl::Renderer::createCommandBuffers()
+void vk::Renderer::createCommandBuffers()
 {
     commandBuffers.resize(Swapchain::MAX_FRAMES_IN_FLIGHT);
 
@@ -165,10 +165,10 @@ void fl::Renderer::createCommandBuffers()
     alloc_info.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
     if (vkAllocateCommandBuffers(device.getLogicalDevice(), &alloc_info, commandBuffers.data()) != VK_SUCCESS)
-        throw std::runtime_error("fl::Renderer::createCommandBuffers: FAILED TO ALLOCATE COMMAND BUFFERS");
+        throw std::runtime_error("vk::Renderer::createCommandBuffers: FAILED TO ALLOCATE COMMAND BUFFERS");
 }
 
-void fl::Renderer::freeCommandBuffers()
+void vk::Renderer::freeCommandBuffers()
 {
     vkFreeCommandBuffers(device.getLogicalDevice(), device.getCommandPool(),
                          static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
@@ -176,7 +176,7 @@ void fl::Renderer::freeCommandBuffers()
     commandBuffers.clear();
 }
 
-void fl::Renderer::recreateSwapchain()
+void vk::Renderer::recreateSwapchain()
 {
     auto extent = window.getExtent();
 
@@ -198,7 +198,7 @@ void fl::Renderer::recreateSwapchain()
         swapchain = std::make_unique<Swapchain>(device, window, old_swapchain);
 
         if (!old_swapchain->compatibleWith(*swapchain))
-            throw std::runtime_error("fl::Renderer::recreateSwapchain: SWAPCHAIN IMAGE OR DEPTH FORMAT HAS CHANGED");
+            throw std::runtime_error("vk::Renderer::recreateSwapchain: SWAPCHAIN IMAGE OR DEPTH FORMAT HAS CHANGED");
     }
 
     // createPipeline();

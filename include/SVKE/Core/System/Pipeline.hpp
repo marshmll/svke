@@ -11,7 +11,7 @@
 #include <iostream>
 #include <memory>
 
-namespace fl
+namespace vk
 {
 class Pipeline
 {
@@ -58,4 +58,4 @@ class Pipeline
     void createGraphicsPipeline(const Config &config, Shader &vert_shader, Shader &frag_shader);
 };
 
-} // namespace fl
+} // namespace vk

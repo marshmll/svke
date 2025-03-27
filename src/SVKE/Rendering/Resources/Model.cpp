@@ -1,21 +1,21 @@
 #include "SVKE/Rendering/Resources/Model.hpp"
 
-fl::Model::Model(Device &device) : device(device), vertexCount(0), loaded(false)
+vk::Model::Model(Device &device) : device(device), vertexCount(0), loaded(false)
 {
 }
 
-fl::Model::~Model()
+vk::Model::~Model()
 {
     vkDeviceWaitIdle(device.getLogicalDevice());
     vmaDestroyBuffer(device.getAllocator(), vertexBuffer, vertexBufferMemory);
 }
 
-void fl::Model::loadFromData(const VertexArray &vertices)
+void vk::Model::loadFromData(const VertexArray &vertices)
 {
     createVertexBuffers(vertices);
 }
 
-void fl::Model::bind(VkCommandBuffer &command_buffer)
+void vk::Model::bind(VkCommandBuffer &command_buffer)
 {
     assert(loaded == true && "CANNOT BIND UNINITIALIZED MODEL");
 
@@ -25,14 +25,14 @@ void fl::Model::bind(VkCommandBuffer &command_buffer)
     vkCmdBindVertexBuffers(command_buffer, 0, 1, buffers, offsets);
 }
 
-void fl::Model::draw(VkCommandBuffer &command_buffer)
+void vk::Model::draw(VkCommandBuffer &command_buffer)
 {
     assert(loaded == true && "CANNOT DRAW UNINITIALIZED MODEL");
 
     vkCmdDraw(command_buffer, vertexCount, 1, 0, 0);
 }
 
-std::unique_ptr<fl::Model> fl::Model::createCubeModel(Device &device, const glm::vec3 &offset)
+std::unique_ptr<vk::Model> vk::Model::createCubeModel(Device &device, const glm::vec3 &offset)
 {
     VertexArray vertices = VertexArray{
         // Left face
@@ -93,7 +93,7 @@ std::unique_ptr<fl::Model> fl::Model::createCubeModel(Device &device, const glm:
     return std::move(model);
 }
 
-void fl::Model::createVertexBuffers(const VertexArray &vertices)
+void vk::Model::createVertexBuffers(const VertexArray &vertices)
 {
     vertexCount = static_cast<uint32_t>(vertices.size());
     assert(vertexCount >= 3 && "VERTEX COUNT MUST BE AT LEAST 3");

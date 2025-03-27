@@ -1,6 +1,6 @@
 #include "App.hpp"
 
-fl::App::App()
+vk::App::App()
 {
     createWindow();
     createDevice();
@@ -8,11 +8,11 @@ fl::App::App()
     loadDrawables();
 }
 
-fl::App::~App()
+vk::App::~App()
 {
 }
 
-void fl::App::run()
+void vk::App::run()
 {
     Camera camera;
     RenderSystem render_system(*device, *renderer);
@@ -40,22 +40,22 @@ void fl::App::run()
     }
 }
 
-void fl::App::createWindow()
+void vk::App::createWindow()
 {
     window = std::make_unique<Window>(846, 484, "Flare");
 }
 
-void fl::App::createDevice()
+void vk::App::createDevice()
 {
     device = std::make_unique<Device>(*window);
 }
 
-void fl::App::createRenderer()
+void vk::App::createRenderer()
 {
     renderer = std::make_unique<Renderer>(*device, *window);
 }
 
-void fl::App::loadDrawables()
+void vk::App::loadDrawables()
 {
     std::shared_ptr<Model> model = Model::createCubeModel(*device, {0.f, 0.f, 0.f});
 

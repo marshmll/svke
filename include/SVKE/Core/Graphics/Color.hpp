@@ -17,19 +17,19 @@
 
 // clang-format off
 
-#define COLOR_BLACK  fl::Color(0,   0,   0,   255)
-#define COLOR_RED    fl::Color(255, 0,   0,   255)
-#define COLOR_GREEN  fl::Color(0,   255, 0,   255)
-#define COLOR_BLUE   fl::Color(0,   0,   255, 255)
-#define COLOR_YELLOW fl::Color(255, 255, 0,   255)
-#define COLOR_CYAN   fl::Color(0,   255, 255, 255)
-#define COLOR_PURPLE fl::Color(255, 0,   255, 255)
-#define COLOR_WHITE  fl::Color(255, 255, 255, 255)
-#define COLOR_GRAY   fl::Color(128, 128, 128, 255)
+#define COLOR_BLACK  vk::Color(0,   0,   0,   255)
+#define COLOR_RED    vk::Color(255, 0,   0,   255)
+#define COLOR_GREEN  vk::Color(0,   255, 0,   255)
+#define COLOR_BLUE   vk::Color(0,   0,   255, 255)
+#define COLOR_YELLOW vk::Color(255, 255, 0,   255)
+#define COLOR_CYAN   vk::Color(0,   255, 255, 255)
+#define COLOR_PURPLE vk::Color(255, 0,   255, 255)
+#define COLOR_WHITE  vk::Color(255, 255, 255, 255)
+#define COLOR_GRAY   vk::Color(128, 128, 128, 255)
 
 // clang-format on
 
-namespace fl
+namespace vk
 {
 class Color
 {
@@ -66,4 +66,4 @@ class Color
     uint8_t b;
     uint8_t a;
 };
-} // namespace fl
+} // namespace vk

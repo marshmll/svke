@@ -9,7 +9,7 @@
 #include <cassert>
 #include <string>
 
-namespace fl
+namespace vk
 {
 class Window
 {
@@ -51,4 +51,4 @@ class Window
 
     static void framebufferResizedCallback(GLFWwindow *window, int width, int height);
 };
-} // namespace fl
+} // namespace vk

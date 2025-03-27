@@ -8,7 +8,7 @@
 #include <cstring>
 #include <memory>
 
-namespace fl
+namespace vk
 {
 class Model
 {
@@ -38,4 +38,4 @@ class Model
     void createVertexBuffers(const VertexArray &vertices);
 };
 
-} // namespace fl
+} // namespace vk
