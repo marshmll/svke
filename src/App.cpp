@@ -16,21 +16,38 @@ void vk::App::run()
 {
     Camera camera;
     Object viewer;
-    Keyboard kb(*window);
-    KeyboardMovementController camera_controller(kb);
+    Keyboard keyboard(*window);
+    Mouse mouse(*window);
+    MovementController camera_controller(keyboard, mouse);
     RenderSystem render_system(*device, *renderer);
-    Clock delta_clk;
+    Timer delta_timer;
+
+    if (Mouse::isRawMotionSupported())
+    {
+        mouse.setCursorMode(Mouse::CursorMode::Disabled);
+    }
+    else
+    {
+        std::cerr << "Mouse raw mode is not supported" << std::endl;
+    }
+
+    viewer.setTranslation({2.f, 0.f, -.5f});
+    viewer.setRotation({0.f, -.5f, 0.f});
 
     while (!window->shouldClose())
     {
         window->pollEvents();
 
+        if (keyboard.isKeyPressed(Keyboard::Key::Escape))
+            mouse.setCursorMode(Mouse::CursorMode::Normal);
+
         const float aspect_ratio = renderer->getAspectRatio();
         camera.setPerspectiveProjection(glm::radians(45.f), aspect_ratio, .1f, 10.f);
 
-        const float dt = delta_clk.getElapsedTimeAsSeconds();
-        delta_clk.restart();
+        const float dt = delta_timer.getElapsedTimeAsSeconds();
+        delta_timer.restart();
 
+        mouse.updateCursorData();
         camera_controller.moveInPlaneXZ(dt, viewer);
         camera.setViewYXZ(viewer.getTranslation(), viewer.getRotation());
 

@@ -9,11 +9,12 @@
 #include <glm/glm.hpp>
 
 #include "SVKE/IO/Keyboard.hpp"
+#include "SVKE/IO/Mouse.hpp"
 #include "SVKE/Rendering/Resources/Object.hpp"
 
 namespace vk
 {
-class KeyboardMovementController
+class MovementController
 {
   public:
     struct KeyMappings
@@ -30,12 +31,13 @@ class KeyboardMovementController
         Keyboard::Key lookRight = Keyboard::Key::Right;
     };
 
-    KeyboardMovementController(Keyboard &kb);
+    MovementController(Keyboard &keyboard, Mouse &mouse);
 
     void moveInPlaneXZ(const float dt, Object &object);
 
   private:
-    Keyboard &kb;
+    Keyboard &keyboard;
+    Mouse &mouse;
 
     KeyMappings keyMappings;
     float speed;

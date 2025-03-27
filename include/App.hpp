@@ -6,8 +6,9 @@
 #include "SVKE/Core/System/Device.hpp"
 #include "SVKE/Rendering/Systems/Renderer.hpp"
 #include "SVKE/Rendering/Systems/RenderSystem.hpp"
-#include "SVKE/IO/KeyboardMovementController.hpp"
-#include "SVKE/Time/Clock.hpp"
+#include "SVKE/IO/MovementController.hpp"
+#include "SVKE/IO/Mouse.hpp"
+#include "SVKE/Time/Timer.hpp"
 
 #include <chrono>
 

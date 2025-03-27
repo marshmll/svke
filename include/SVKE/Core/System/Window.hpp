@@ -8,6 +8,7 @@
 
 #include <cassert>
 #include <string>
+#include <iostream>
 
 namespace vk
 {
@@ -36,18 +37,28 @@ class Window
 
     const bool wasResized() const;
 
+    const bool isFullscreen() const;
+
     void setResized(const bool resized);
 
-    void setWidth(uint32_t width);
+    void setPosition(const int x, const int y);
 
-    void setHeight(uint32_t height);
+    void setWidth(const uint32_t width);
+
+    void setHeight(const uint32_t height);
+
+    void setFullscreen(const bool fullscreen);
 
   private:
     GLFWwindow *window;
+    GLFWmonitor *monitor;
     int width;
     int height;
+    int x;
+    int y;
     std::string title;
     bool framebufferResized;
+    bool fullscreen;
 
     static void framebufferResizedCallback(GLFWwindow *window, int width, int height);
 };

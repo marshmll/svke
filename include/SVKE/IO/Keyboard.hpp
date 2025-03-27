@@ -139,6 +139,10 @@ class Keyboard
     };
 
     Keyboard(Window &window);
+    Keyboard(const Keyboard &) = delete;
+    Keyboard &operator=(const Keyboard &) = delete;
+    Keyboard(Keyboard &&) = delete;
+    Keyboard &operator=(Keyboard &&) = delete;
 
     const bool isKeyPressed(const Key &key);
 

@@ -4,10 +4,10 @@
 
 namespace vk
 {
-class Clock
+class Timer
 {
   public:
-    Clock();
+    Timer();
 
     void restart();
 
