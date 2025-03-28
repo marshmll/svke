@@ -42,6 +42,7 @@ void vk::Model::loadFromFile(const std::string &path)
 
     VertexArray vertices;
     IndexArray indices;
+    std::unordered_map<Vertex, Index> unique_vertices;
 
     for (auto &shape : shapes)
     {
@@ -83,7 +84,13 @@ void vk::Model::loadFromFile(const std::string &path)
                 v.uv = {attrib.texcoords[2 * index.texcoord_index + 0], attrib.texcoords[2 * index.texcoord_index + 1]};
             }
 
-            vertices.emplace_back(v);
+            if (unique_vertices.find(v) == unique_vertices.end())
+            {
+                unique_vertices[v] = static_cast<Index>(vertices.size());
+                vertices.emplace_back(v);
+            }
+
+            indices.push_back(unique_vertices[v]);
         }
     }
 
@@ -93,7 +100,8 @@ void vk::Model::loadFromFile(const std::string &path)
         loadFromData(vertices);
 
 #ifndef NDEBUG
-    std::cout << "LOADED MODEL WITH " << vertices.size() << " VERTICES FROM FILE: " << path << std::endl;
+    std::cout << "LOADED MODEL (" << vertices.size() << " VERTICES, " << indices.size()
+              << " INDICES FROM FILE: " << path << std::endl;
 #endif
 }
 

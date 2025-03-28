@@ -2,12 +2,32 @@
 
 #include "SVKE/Core/System/Device.hpp"
 #include "SVKE/Core/Graphics/Vertex.hpp"
+#include "SVKE/Utils/HashCombine.hpp"
 
 #include <vk_mem_alloc.h>
 #include <tiny_obj_loader.h>
 
+#ifndef GLM_ENABLE_EXPERIMENTAL
+#define GLM_ENABLE_EXPERIMENTAL
+#endif
+#include <glm/gtx/hash.hpp>
+
 #include <cstring>
 #include <memory>
+
+namespace std
+{
+template <> struct hash<vk::Vertex>
+{
+    inline const size_t operator()(vk::Vertex const &vertex) const
+    {
+        size_t seed = 0;
+
+        vk::hashCombine(seed, vertex.position, vertex.color, vertex.normal, vertex.uv);
+        return seed;
+    }
+};
+} // namespace std
 
 namespace vk
 {
