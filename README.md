@@ -1,1 +1,1 @@
-# FLARE - Fast Lightweight Accelerated Rendering Engine
+# SVKE - Simple Vulkan Engine
