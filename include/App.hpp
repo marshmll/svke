@@ -4,11 +4,11 @@
 #include "SVKE/Rendering/Resources/Object.hpp"
 #include "SVKE/Core/System/Window.hpp"
 #include "SVKE/Core/System/Device.hpp"
+#include "SVKE/Core/Input/MovementController.hpp"
+#include "SVKE/Core/Input/Mouse.hpp"
+#include "SVKE/Core/Time/Timer.hpp"
 #include "SVKE/Rendering/Systems/Renderer.hpp"
 #include "SVKE/Rendering/Systems/RenderSystem.hpp"
-#include "SVKE/IO/MovementController.hpp"
-#include "SVKE/IO/Mouse.hpp"
-#include "SVKE/Time/Timer.hpp"
 
 #include <chrono>
 

@@ -1,4 +1,4 @@
-#include "SVKE/IO/Keyboard.hpp"
+#include "SVKE/Core/Input/Keyboard.hpp"
 
 vk::Keyboard::Keyboard(Window &window) : window(window)
 {

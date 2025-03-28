@@ -34,8 +34,8 @@ void vk::RenderSystem::render(VkCommandBuffer &command_buffer, std::vector<Objec
 
 void vk::RenderSystem::loadShaders()
 {
-    vertShader = std::make_unique<Shader>(device, "shaders/vertex.spv");
-    fragShader = std::make_unique<Shader>(device, "shaders/fragment.spv");
+    vertShader = std::make_unique<Shader>(device, "assets/shaders/vertex.spv");
+    fragShader = std::make_unique<Shader>(device, "assets/shaders/fragment.spv");
 }
 
 void vk::RenderSystem::createPipelineLayout()

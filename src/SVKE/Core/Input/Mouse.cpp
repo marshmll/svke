@@ -1,4 +1,4 @@
-#include "SVKE/IO/Mouse.hpp"
+#include "SVKE/Core/Input/Mouse.hpp"
 
 vk::Mouse::Mouse(Window &window) : window(window)
 {

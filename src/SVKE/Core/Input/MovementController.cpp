@@ -1,4 +1,4 @@
-#include "SVKE/IO/MovementController.hpp"
+#include "SVKE/Core/Input/MovementController.hpp"
 
 vk::MovementController::MovementController(Keyboard &keyboard, Mouse &mouse)
     : keyboard(keyboard), mouse(mouse), speed(1.5f), sensitivity(2.f)

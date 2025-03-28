@@ -31,9 +31,6 @@ void vk::App::run()
         std::cerr << "Mouse raw mode is not supported" << std::endl;
     }
 
-    viewer.setTranslation({2.f, 0.f, -.5f});
-    viewer.setRotation({0.f, -.5f, 0.f});
-
     while (!window->shouldClose())
     {
         window->pollEvents();
@@ -41,10 +38,13 @@ void vk::App::run()
         if (keyboard.isKeyPressed(Keyboard::Key::Escape))
             mouse.setCursorMode(Mouse::CursorMode::Normal);
 
-        const float aspect_ratio = renderer->getAspectRatio();
-        camera.setPerspectiveProjection(glm::radians(45.f), aspect_ratio, .1f, 10.f);
+        else if (keyboard.isKeyPressed(Keyboard::Key::Enter))
+            mouse.setCursorMode(Mouse::CursorMode::Disabled);
 
-        const float dt = delta_timer.getElapsedTimeAsSeconds();
+        const float aspect_ratio = renderer->getAspectRatio();
+        camera.setPerspectiveProjection(glm::radians(45.f), aspect_ratio, .001f, 10.f);
+
+        const float dt = glm::min(delta_timer.getElapsedTimeAsSeconds(), 0.25f);
         delta_timer.restart();
 
         mouse.updateCursorData();
@@ -80,11 +80,12 @@ void vk::App::createRenderer()
 
 void vk::App::loadObjects()
 {
-    std::shared_ptr<Model> model = Model::createCubeModel(*device, {0.f, 0.f, 0.f});
+    std::shared_ptr<Model> model = std::make_shared<Model>(*device);
+    model->loadFromFile("assets/models/smooth_vase.obj");
 
     Object cube;
     cube.setModel(model);
     cube.setTranslation({0.f, 0.f, 2.5f});
-    cube.setScale({0.5f, 0.5f, 0.5f});
+    cube.setScale(glm::vec3{3.f});
     objects.push_back(std::move(cube));
 }

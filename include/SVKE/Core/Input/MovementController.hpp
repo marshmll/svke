@@ -8,8 +8,8 @@
 #endif
 #include <glm/glm.hpp>
 
-#include "SVKE/IO/Keyboard.hpp"
-#include "SVKE/IO/Mouse.hpp"
+#include "SVKE/Core/Input/Keyboard.hpp"
+#include "SVKE/Core/Input/Mouse.hpp"
 #include "SVKE/Rendering/Resources/Object.hpp"
 
 namespace vk

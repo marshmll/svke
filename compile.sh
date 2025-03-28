@@ -1,2 +1,2 @@
-/usr/bin/glslc shaders/vertex.vert -o shaders/vertex.spv
-/usr/bin/glslc shaders/fragment.frag -o shaders/fragment.spv
+/usr/bin/glslc assets/shaders/vertex.vert -o assets/shaders/vertex.spv
+/usr/bin/glslc assets/shaders/fragment.frag -o assets/shaders/fragment.spv
