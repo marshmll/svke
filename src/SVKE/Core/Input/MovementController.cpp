@@ -25,7 +25,7 @@ void vk::MovementController::moveInPlaneXZ(const float dt, Object &object)
             rotate.x -= 1.f;
     }
 
-    auto mouse_speed = sensitivity + std::fabs(mouse_data.deltaX + mouse_data.deltaY) / 2.f;
+    auto mouse_speed = glm::min(sensitivity + std::fabs(mouse_data.deltaX + mouse_data.deltaY) / 4.f, sensitivity * 4.f);
 
     if (glm::dot(rotate, rotate) > std::numeric_limits<float>::epsilon())
         object.setRotation(object.getRotation() + mouse_speed * dt * glm::normalize(rotate));

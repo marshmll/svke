@@ -29,7 +29,7 @@ void vk::Model::loadFromData(const VertexArray &vertices, const IndexArray &indi
     createIndexBuffers(indices);
 }
 
-void vk::Model::loadFromFile(const std::string &path)
+const bool vk::Model::loadFromFile(const std::string &path)
 {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -37,8 +37,10 @@ void vk::Model::loadFromFile(const std::string &path)
     std::string warn, err;
 
     if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str()))
-        throw std::runtime_error("vk::Model::loadFromFile: FAILED TO LOAD MODEL FROM FILE: " + path + " : " + warn +
-                                 " " + err);
+    {
+        std::cerr << "vk::Model::loadFromFile: FAILED TO LOAD MODEL FROM FILE: " << path << " : " << warn << " " << err;
+        return false;
+    }
 
     VertexArray vertices;
     IndexArray indices;
@@ -58,19 +60,11 @@ void vk::Model::loadFromFile(const std::string &path)
                     attrib.vertices[3 * index.vertex_index + 2],
                 };
 
-                auto colorIndex = 3 * index.vertex_index + 2;
-                if (colorIndex < attrib.colors.size())
-                {
-                    v.color = {
-                        attrib.colors[colorIndex - 2],
-                        attrib.colors[colorIndex - 1],
-                        attrib.colors[colorIndex - 0],
-                    };
-                }
-                else
-                {
-                    v.color = {1.f, 1.f, 1.f}; // set default color
-                }
+                v.color = {
+                    attrib.colors[3 * index.vertex_index + 0],
+                    attrib.colors[3 * index.vertex_index + 1],
+                    attrib.colors[3 * index.vertex_index + 2],
+                };
             }
 
             if (index.normal_index >= 0)
@@ -103,6 +97,8 @@ void vk::Model::loadFromFile(const std::string &path)
     std::cout << "LOADED MODEL (" << vertices.size() << " VERTICES, " << indices.size()
               << " INDICES FROM FILE: " << path << std::endl;
 #endif
+
+    return true;
 }
 
 void vk::Model::bind(VkCommandBuffer &command_buffer)

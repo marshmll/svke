@@ -44,7 +44,8 @@ class Model
 
     void loadFromData(const VertexArray &vertices, const IndexArray &indices);
 
-    void loadFromFile(const std::string &path);
+    [[nodiscard]]
+    const bool loadFromFile(const std::string &path);
 
     void bind(VkCommandBuffer &command_buffer);
 

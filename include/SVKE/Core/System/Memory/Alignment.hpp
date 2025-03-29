@@ -5,5 +5,5 @@
 #define ALIGNAS_VEC3 alignas(16)
 #define ALIGNAS_VEC4 alignas(16)
 #define ALIGNAS_MAT2 alignas(16)
-#define ALIGNAS_MAT3 alignas(48)
+#define ALIGNAS_MAT3 alignas(64)
 #define ALIGNAS_MAT4 alignas(64)

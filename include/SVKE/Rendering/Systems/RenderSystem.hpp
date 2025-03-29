@@ -24,7 +24,7 @@ class RenderSystem
     struct PushConstantData
     {
         ALIGNAS_MAT4 glm::mat4 transform{1.f};
-        ALIGNAS_VEC3 glm::vec3 color;
+        ALIGNAS_MAT4 glm::mat4 normalMatrix{1.f};
     };
 
   public:

@@ -21,8 +21,10 @@ void vk::RenderSystem::render(VkCommandBuffer &command_buffer, std::vector<Objec
     for (auto &object : objects)
     {
         PushConstantData push = {};
-        push.color = object.getColor().toVec3();
-        push.transform = projection_view * object.transform();
+
+        auto model_matrix = object.transform();
+        push.transform = projection_view * model_matrix;
+        push.normalMatrix = object.normalMatrix();
 
         vkCmdPushConstants(command_buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
                            sizeof(PushConstantData), &push);

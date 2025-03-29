@@ -1,17 +1,14 @@
 #version 450
 
-/* INPUT */
+layout(location = 0) in vec3 fragColor;
+
+layout(location = 0) out vec4 outColor;
+
 layout(push_constant) uniform Push
 {
     mat4 transform;
-    vec3 color;
-}
-push;
-
-layout(location = 0) in vec3 fragColor;
-
-/* OUTPUT */
-layout(location = 0) out vec4 outColor;
+    mat4 normalMatrix;
+} push;
 
 void main()
 {
