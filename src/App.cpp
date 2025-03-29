@@ -5,29 +5,51 @@ vk::App::App()
     createWindow();
     createDevice();
     createRenderer();
+    createGlobalPool();
     loadObjects();
 }
 
 void vk::App::run()
 {
+    std::array<std::unique_ptr<Buffer>, Swapchain::MAX_FRAMES_IN_FLIGHT> global_ubo_buffers;
+
+    for (auto &buffer : global_ubo_buffers)
+    {
+        buffer = std::make_unique<Buffer>(*device, sizeof(GlobalUBO),
+                                          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                                          VMA_MEMORY_USAGE_AUTO,
+                                          VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
+                                              VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+        buffer->map();
+    }
+
+    auto global_set_layout = DescriptorSetLayout::Builder(*device)
+                                 .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+                                 .build();
+
+    std::vector<VkDescriptorSet> global_descriptor_sets(Swapchain::MAX_FRAMES_IN_FLIGHT);
+
+    for (int i = 0; i < global_descriptor_sets.size(); ++i)
+    {
+        auto buffer_info = global_ubo_buffers[i]->getDescriptorInfo();
+        DescriptorWriter(*global_set_layout, *globalPool).writeBuffer(0, buffer_info).build(global_descriptor_sets[i]);
+    }
+
     Camera camera;
     Object viewer;
+    viewer.setTranslation({0.f, 0.f, -2.f});
+
     Keyboard keyboard(*window);
     Mouse mouse(*window);
     MovementController camera_controller(keyboard, mouse);
-    RenderSystem render_system(*device, *renderer);
+
+    RenderSystem render_system(*device, *renderer, *global_set_layout);
     Timer delta_timer;
 
-    viewer.setTranslation({0.f, 0.f, -2.f});
-
     if (Mouse::isRawMotionSupported())
-    {
         mouse.setCursorMode(Mouse::CursorMode::Disabled);
-    }
     else
-    {
         std::cerr << "Mouse raw mode is not supported" << std::endl;
-    }
 
     while (!window->shouldClose())
     {
@@ -51,10 +73,19 @@ void vk::App::run()
 
         if (auto command_buffer = renderer->beginFrame())
         {
+            auto current_frame_index = renderer->getCurrentFrameIndex();
+
+            FrameInfo frame_info{current_frame_index, dt, command_buffer, camera,
+                                 global_descriptor_sets[current_frame_index]};
+
+            // Update
+            GlobalUBO ubo = {};
+            ubo.projectionViewMatrix = camera.getProjectionMatrix() * camera.getViewMatrix();
+            global_ubo_buffers[current_frame_index]->write((void *)&ubo, sizeof(ubo));
+
+            // Render
             renderer->beginRenderPass(command_buffer);
-
-            render_system.render(command_buffer, objects, camera);
-
+            render_system.render(frame_info, objects);
             renderer->endRenderPass(command_buffer);
             renderer->endFrame();
         }
@@ -74,6 +105,14 @@ void vk::App::createDevice()
 void vk::App::createRenderer()
 {
     renderer = std::make_unique<Renderer>(*device, *window);
+}
+
+void vk::App::createGlobalPool()
+{
+    globalPool = DescriptorPool::Builder(*device)
+                     .setMaxSets(Swapchain::MAX_FRAMES_IN_FLIGHT)
+                     .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Swapchain::MAX_FRAMES_IN_FLIGHT)
+                     .build();
 }
 
 void vk::App::loadObjects()

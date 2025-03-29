@@ -27,15 +27,18 @@ class Buffer
     ~Buffer();
 
     void map();
+
     void unmap();
 
     void write(void *data, VkDeviceSize size);
+
+    void copyTo(Buffer &other, const VkDeviceSize &size);
 
     const VkDeviceSize &getSize() const;
 
     VkBuffer &getBuffer();
 
-    void copyTo(Buffer &other, const VkDeviceSize &size);
+    VkDescriptorBufferInfo getDescriptorInfo(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 
   private:
     Device &device;

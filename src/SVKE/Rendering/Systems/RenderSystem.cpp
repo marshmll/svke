@@ -1,9 +1,10 @@
 #include "SVKE/Rendering/Systems/RenderSystem.hpp"
 
-vk::RenderSystem::RenderSystem(Device &device, Renderer &renderer) : device(device), pipelineLayout(VK_NULL_HANDLE)
+vk::RenderSystem::RenderSystem(Device &device, Renderer &renderer, DescriptorSetLayout &global_set_layout)
+    : device(device), pipelineLayout(VK_NULL_HANDLE)
 {
     loadShaders();
-    createPipelineLayout();
+    createPipelineLayout(global_set_layout);
     createPipeline(renderer.getRenderPass());
 }
 
@@ -12,25 +13,25 @@ vk::RenderSystem::~RenderSystem()
     vkDestroyPipelineLayout(device.getLogicalDevice(), pipelineLayout, nullptr);
 }
 
-void vk::RenderSystem::render(VkCommandBuffer &command_buffer, std::vector<Object> &objects, const Camera &camera)
+void vk::RenderSystem::render(const FrameInfo &frame_info, std::vector<Object> &objects)
 {
-    pipeline->bind(command_buffer);
+    pipeline->bind(frame_info.commandBuffer);
 
-    auto projection_view = camera.getProjectionMatrix() * camera.getViewMatrix();
+    vkCmdBindDescriptorSets(frame_info.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
+                            &frame_info.globalDescriptorSet, 0, nullptr);
 
     for (auto &object : objects)
     {
         PushConstantData push = {};
-
-        auto model_matrix = object.transform();
-        push.transform = projection_view * model_matrix;
+        push.modelMatrix = object.transform();
         push.normalMatrix = object.normalMatrix();
 
-        vkCmdPushConstants(command_buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-                           sizeof(PushConstantData), &push);
+        vkCmdPushConstants(frame_info.commandBuffer, pipelineLayout,
+                           VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantData),
+                           &push);
 
-        object.bind(command_buffer);
-        object.draw(command_buffer);
+        object.bind(frame_info.commandBuffer);
+        object.draw(frame_info.commandBuffer);
     }
 }
 
@@ -40,17 +41,19 @@ void vk::RenderSystem::loadShaders()
     fragShader = std::make_unique<Shader>(device, "assets/shaders/fragment.spv");
 }
 
-void vk::RenderSystem::createPipelineLayout()
+void vk::RenderSystem::createPipelineLayout(DescriptorSetLayout &global_set_layout)
 {
     VkPushConstantRange push_constant_range = {};
     push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     push_constant_range.offset = 0;
     push_constant_range.size = sizeof(PushConstantData);
 
+    std::vector<VkDescriptorSetLayout> global_set_layouts{global_set_layout.getDescriptorSetLayout()};
+
     VkPipelineLayoutCreateInfo pipeline_layout_info = {};
     pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipeline_layout_info.setLayoutCount = 0;
-    pipeline_layout_info.pSetLayouts = nullptr;
+    pipeline_layout_info.setLayoutCount = static_cast<uint32_t>(global_set_layouts.size());
+    pipeline_layout_info.pSetLayouts = global_set_layouts.data();
     pipeline_layout_info.pushConstantRangeCount = 1;
     pipeline_layout_info.pPushConstantRanges = &push_constant_range;
 

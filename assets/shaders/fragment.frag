@@ -6,9 +6,10 @@ layout(location = 0) out vec4 outColor;
 
 layout(push_constant) uniform Push
 {
-    mat4 transform;
+    mat4 modelMatrix;
     mat4 normalMatrix;
-} push;
+}
+push;
 
 void main()
 {

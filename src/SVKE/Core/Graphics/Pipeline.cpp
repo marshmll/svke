@@ -1,4 +1,4 @@
-#include "SVKE/Core/System/Pipeline.hpp"
+#include "SVKE/Core/Graphics/Pipeline.hpp"
 
 vk::Pipeline::Pipeline(Device &device, const std::string &vert_path, const std::string &frag_path) : device(device)
 {

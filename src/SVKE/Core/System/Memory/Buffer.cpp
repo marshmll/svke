@@ -26,6 +26,7 @@ vk::Buffer::Buffer(Device &device, VkDeviceSize size, VkBufferUsageFlags usage, 
 
     VmaAllocationCreateInfo alloc_info = {};
     alloc_info.usage = memory_usage;
+    alloc_info.priority = 1.f;
     alloc_info.flags = flags;
 
     if (vmaCreateBuffer(device.getAllocator(), &buffer_info, &alloc_info, &buffer, &allocation, nullptr) != VK_SUCCESS)
@@ -35,6 +36,10 @@ vk::Buffer::Buffer(Device &device, VkDeviceSize size, VkBufferUsageFlags usage, 
 vk::Buffer::~Buffer()
 {
     vkDeviceWaitIdle(device.getLogicalDevice());
+
+    if (mappedMem != nullptr)
+        unmap();
+
     vmaDestroyBuffer(device.getAllocator(), buffer, allocation);
 }
 
@@ -61,16 +66,6 @@ void vk::Buffer::write(void *data, VkDeviceSize size)
     memcpy(mappedMem, data, size);
 }
 
-const VkDeviceSize &vk::Buffer::getSize() const
-{
-    return size;
-}
-
-VkBuffer &vk::Buffer::getBuffer()
-{
-    return buffer;
-}
-
 void vk::Buffer::copyTo(Buffer &other, const VkDeviceSize &size)
 {
     VkCommandBuffer command_buffer = device.beginSingleTimeCommands();
@@ -82,4 +77,23 @@ void vk::Buffer::copyTo(Buffer &other, const VkDeviceSize &size)
     vkCmdCopyBuffer(command_buffer, this->buffer, other.getBuffer(), 1, &copy_region);
 
     device.endSingleTimeCommands(command_buffer);
+}
+
+const VkDeviceSize &vk::Buffer::getSize() const
+{
+    return size;
+}
+
+VkBuffer &vk::Buffer::getBuffer()
+{
+    return buffer;
+}
+
+VkDescriptorBufferInfo vk::Buffer::getDescriptorInfo(VkDeviceSize size, VkDeviceSize offset)
+{
+    return VkDescriptorBufferInfo{
+        buffer,
+        offset,
+        size,
+    };
 }
