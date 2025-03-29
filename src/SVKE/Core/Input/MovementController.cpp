@@ -1,7 +1,7 @@
 #include "SVKE/Core/Input/MovementController.hpp"
 
 vk::MovementController::MovementController(Keyboard &keyboard, Mouse &mouse)
-    : keyboard(keyboard), mouse(mouse), speed(1.5f), sensitivity(2.f)
+    : keyboard(keyboard), mouse(mouse), speed(1.5f), sensitivity(.003f)
 {
 }
 
@@ -10,32 +10,30 @@ void vk::MovementController::moveInPlaneXZ(const float dt, Object &object)
     glm::vec3 rotate{0};
     auto mouse_data = mouse.getCursorData();
 
-    if (mouse.getCursorMode() == Mouse::CursorMode::Disabled)
+    if (mouse.isRawModeEnabled())
     {
-        if (mouse_data.deltaX > 0.f)
-            rotate.y += 1.f;
-
-        if (mouse_data.deltaX < 0.f)
-            rotate.y -= 1.f;
-
-        if (mouse_data.deltaY < 0.f)
-            rotate.x += 1.f;
-
-        if (mouse_data.deltaY > 0.f)
-            rotate.x -= 1.f;
+        // Apply raw deltas directly (no dt scaling for rotation)
+        rotate.y += mouse_data.deltaX * sensitivity;  // Horizontal (yaw)
+        rotate.x += -mouse_data.deltaY * sensitivity; // Vertical (pitch)
+    }
+    else
+    {
+        // Fallback for Non-Raw Input
+        rotate.y += mouse_data.deltaX * sensitivity * dt * 60.0f; // Scale to 60Hz
+        rotate.x += -mouse_data.deltaY * sensitivity * dt * 60.0f;
     }
 
-    auto mouse_speed = glm::min(sensitivity + std::fabs(mouse_data.deltaX + mouse_data.deltaY) / 4.f, sensitivity * 4.f);
-
+    // Apply rotation
     if (glm::dot(rotate, rotate) > std::numeric_limits<float>::epsilon())
-        object.setRotation(object.getRotation() + mouse_speed * dt * glm::normalize(rotate));
+        object.setRotation(object.getRotation() + rotate);
 
-    // limit pitch values between about +/- 85ish degrees
+    // Clamp pitch and wrap yaw
     auto r = object.getRotation();
-    r.x = glm::clamp(r.x, -1.5f, 1.5f);
-    r.y = glm::mod(r.y, glm::two_pi<float>());
+    r.x = glm::clamp(r.x, -1.5f, 1.5f);        // ~±85° pitch limit
+    r.y = glm::mod(r.y, glm::two_pi<float>()); // Wrap yaw to [0, 2π]
     object.setRotation(r);
 
+    // Movement (unchanged, still uses dt)
     float yaw = object.getRotation().y;
     const glm::vec3 forwardDir{sin(yaw), 0.f, cos(yaw)};
     const glm::vec3 rightDir{forwardDir.z, 0.f, -forwardDir.x};

@@ -47,9 +47,14 @@ void vk::App::run()
     Timer delta_timer;
 
     if (Mouse::isRawMotionSupported())
+    {
+        mouse.setRawMode(true);
         mouse.setCursorMode(Mouse::CursorMode::Disabled);
+    }
     else
+    {
         std::cerr << "Mouse raw mode is not supported" << std::endl;
+    }
 
     while (!window->shouldClose())
     {
@@ -62,7 +67,7 @@ void vk::App::run()
             mouse.setCursorMode(Mouse::CursorMode::Disabled);
 
         const float aspect_ratio = renderer->getAspectRatio();
-        camera.setPerspectiveProjection(glm::radians(45.f), aspect_ratio, .001f, 10.f);
+        camera.setPerspectiveProjection(glm::radians(50.f), aspect_ratio, .001f, 100.f);
 
         const float dt = glm::min(delta_timer.getElapsedTimeAsSeconds(), 0.25f);
         delta_timer.restart();
@@ -90,6 +95,9 @@ void vk::App::run()
             renderer->endRenderPass(command_buffer);
             renderer->endFrame();
         }
+
+        if (window->shouldClose())
+            std::cout << "Last recorded FPS: " << 1.f / dt << std::endl;
     }
 }
 
@@ -105,7 +113,7 @@ void vk::App::createDevice()
 
 void vk::App::createRenderer()
 {
-    renderer = std::make_unique<Renderer>(*device, *window);
+    renderer = std::make_unique<Renderer>(*device, *window, Swapchain::PresentMode::Mailbox);
 }
 
 void vk::App::createGlobalPool()

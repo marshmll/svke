@@ -19,8 +19,16 @@ class Swapchain
   public:
     static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
-    Swapchain(Device &device, Window &window);
-    Swapchain(Device &device, Window &window, std::shared_ptr<Swapchain> &previous);
+    enum class PresentMode : int
+    {
+        Mailbox = VK_PRESENT_MODE_MAILBOX_KHR,
+        Immediate = VK_PRESENT_MODE_IMMEDIATE_KHR,
+        VSync = VK_PRESENT_MODE_FIFO_KHR
+    };
+
+    Swapchain(Device &device, Window &window, const PresentMode &preferred_present_mode = PresentMode::Mailbox);
+    Swapchain(Device &device, Window &window, std::shared_ptr<Swapchain> &previous,
+              const PresentMode &preferred_present_mode = PresentMode::Mailbox);
     ~Swapchain();
 
     Swapchain(const Swapchain &) = delete;
@@ -82,9 +90,9 @@ class Swapchain
     std::vector<VkFence> imagesInFlight;
     size_t currentFrame;
 
-    void init();
+    void init(const PresentMode &preferred_present_mode);
 
-    void createSwapchain();
+    void createSwapchain(const PresentMode &preferred_present_mode);
 
     void createImageViews();
 
@@ -98,8 +106,11 @@ class Swapchain
 
     VkSurfaceFormatKHR chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &available_formats);
 
-    VkPresentModeKHR choosePresentMode(const std::vector<VkPresentModeKHR> &available_present_modes);
+    VkPresentModeKHR choosePresentMode(const std::vector<VkPresentModeKHR> &available_present_modes,
+                                       const PresentMode &preferred_present_mode);
 
     VkExtent2D chooseExtent(const VkSurfaceCapabilitiesKHR &capabilities);
+
+    const std::string presentModeName(const PresentMode &present_mode);
 };
 } // namespace vk

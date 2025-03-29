@@ -1,14 +1,16 @@
 #include "SVKE/Core/System/Swapchain.hpp"
 
-vk::Swapchain::Swapchain(Device &device, Window &window) : device(device), window(window), currentFrame(0)
+vk::Swapchain::Swapchain(Device &device, Window &window, const PresentMode &preferred_present_mode)
+    : device(device), window(window), currentFrame(0)
 {
-    init();
+    init(preferred_present_mode);
 }
 
-vk::Swapchain::Swapchain(Device &device, Window &window, std::shared_ptr<Swapchain> &previous)
+vk::Swapchain::Swapchain(Device &device, Window &window, std::shared_ptr<Swapchain> &previous,
+                         const PresentMode &preferred_present_mode)
     : device(device), window(window), oldSwapchain(previous), currentFrame(0)
 {
-    init();
+    init(preferred_present_mode);
 
     // Give up ownership
     oldSwapchain = nullptr;
@@ -176,9 +178,9 @@ const uint32_t vk::Swapchain::getHeight()
     return extent.height;
 }
 
-void vk::Swapchain::init()
+void vk::Swapchain::init(const PresentMode &preferred_present_mode)
 {
-    createSwapchain();
+    createSwapchain(preferred_present_mode);
     createImageViews();
     createRenderPass();
     createDepthResources();
@@ -186,19 +188,17 @@ void vk::Swapchain::init()
     createSyncObjects();
 }
 
-void vk::Swapchain::createSwapchain()
+void vk::Swapchain::createSwapchain(const PresentMode &preferred_present_mode)
 {
     Device::SwapchainSupportDetails swapchainSupport = device.getSwapchainSupport();
 
     VkSurfaceFormatKHR surfaceFormat = chooseSurfaceFormat(swapchainSupport.formats);
-    VkPresentModeKHR presentMode = choosePresentMode(swapchainSupport.presentModes);
+    VkPresentModeKHR presentMode = choosePresentMode(swapchainSupport.presentModes, preferred_present_mode);
     VkExtent2D extent = chooseExtent(swapchainSupport.capabilities);
 
     uint32_t image_count = swapchainSupport.capabilities.minImageCount + 1;
     if (swapchainSupport.capabilities.maxImageCount > 0 && image_count > swapchainSupport.capabilities.maxImageCount)
-    {
         image_count = swapchainSupport.capabilities.maxImageCount;
-    }
 
     VkSwapchainCreateInfoKHR swapchain_info = {};
     swapchain_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -236,9 +236,7 @@ void vk::Swapchain::createSwapchain()
     swapchain_info.oldSwapchain = oldSwapchain ? oldSwapchain->getHandle() : VK_NULL_HANDLE;
 
     if (vkCreateSwapchainKHR(device.getLogicalDevice(), &swapchain_info, nullptr, &swapchain) != VK_SUCCESS)
-    {
         throw std::runtime_error("vk::Swapchain::createSwapchain: FAILED TO CREATE SWAPCHAIN");
-    }
 
     // we only specified a minimum number of images in the swap chain, so the implementation is
     // allowed to create a swapchain with more. That's why we'll first query the final number of
@@ -270,9 +268,7 @@ void vk::Swapchain::createImageViews()
         view_info.subresourceRange.layerCount = 1;
 
         if (vkCreateImageView(device.getLogicalDevice(), &view_info, nullptr, &imageViews[i]) != VK_SUCCESS)
-        {
             throw std::runtime_error("vk::Swapchain::createSwapchain: FAILED TO CREATE TEXTURE IMAGE VIEW");
-        }
     }
 }
 
@@ -333,9 +329,7 @@ void vk::Swapchain::createRenderPass()
     render_pass_info.pDependencies = &dependency;
 
     if (vkCreateRenderPass(device.getLogicalDevice(), &render_pass_info, nullptr, &renderPass) != VK_SUCCESS)
-    {
         throw std::runtime_error("vk::Swapchain::createRenderPass: FAILED TO CREATE RENDER PASS");
-    }
 }
 
 void vk::Swapchain::createFramebuffers()
@@ -357,9 +351,7 @@ void vk::Swapchain::createFramebuffers()
         framebuffer_info.layers = 1;
 
         if (vkCreateFramebuffer(device.getLogicalDevice(), &framebuffer_info, nullptr, &framebuffers[i]) != VK_SUCCESS)
-        {
             throw std::runtime_error("vk::Swapchain::createFramebuffers: FAILED TO CREATE FRAMEBUFFERS");
-        }
     }
 }
 
@@ -443,38 +435,30 @@ VkSurfaceFormatKHR vk::Swapchain::chooseSurfaceFormat(const std::vector<VkSurfac
     for (const auto &format : available_formats)
     {
         if (format.format == VK_FORMAT_B8G8R8A8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
-        {
             return format;
-        }
     }
 
     return available_formats[0];
 }
 
-VkPresentModeKHR vk::Swapchain::choosePresentMode(const std::vector<VkPresentModeKHR> &available_present_modes)
+VkPresentModeKHR vk::Swapchain::choosePresentMode(const std::vector<VkPresentModeKHR> &available_present_modes,
+                                                  const PresentMode &preferred_present_mode)
 {
     for (const auto &mode : available_present_modes)
     {
-        if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
+        if (mode == static_cast<VkPresentModeKHR>(preferred_present_mode))
         {
 #ifndef NDEBUG
-            std::cout << "PRESENT MODE: MAILBOX" << std::endl;
+            std::cout << "USING PRESENT MODE: " << presentModeName(preferred_present_mode) << std::endl;
 #endif
-
             return mode;
         }
     }
 
-    // for (const auto &mode : available_present_modes)
-    // {
-    //     if (mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
-    //     {
-    //         std::cout << "PRESENT MODE: IMMEDIATE" << std::endl;
-    //         return mode;
-    //     }
-    // }
+#ifndef NDEBUG
+    std::cout << "USING PRESENT MODE: VSync" << std::endl;
+#endif
 
-    std::cout << "PRESENT MODE: V-SYNC" << std::endl;
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
@@ -493,5 +477,20 @@ VkExtent2D vk::Swapchain::chooseExtent(const VkSurfaceCapabilitiesKHR &capabilit
                                         std::min(capabilities.maxImageExtent.height, actual_extent.height));
 
         return actual_extent;
+    }
+}
+
+const std::string vk::Swapchain::presentModeName(const PresentMode &present_mode)
+{
+    switch (present_mode)
+    {
+    case PresentMode::VSync:
+        return "VSync";
+    case PresentMode::Immediate:
+        return "Immediate";
+    case PresentMode::Mailbox:
+        return "Mailbox";
+    default:
+        return "Unknown";
     }
 }

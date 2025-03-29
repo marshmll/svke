@@ -20,7 +20,9 @@ namespace vk
 class Renderer
 {
   public:
-    Renderer(Device &device, Window &window, const Color &clear_color = COLOR_BLACK);
+    Renderer(Device &device, Window &window,
+             const Swapchain::PresentMode &preferred_present_mode = Swapchain::PresentMode::Mailbox,
+             const Color &clear_color = COLOR_BLACK);
     Renderer(const Renderer &) = delete;
     Renderer &operator=(const Renderer &) = delete;
 
@@ -47,6 +49,8 @@ class Renderer
   private:
     Device &device;
     Window &window;
+
+    Swapchain::PresentMode preferredPresentMode;
 
     Color clearColor;
 

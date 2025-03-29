@@ -11,7 +11,7 @@ class Mouse
     {
         Normal = GLFW_CURSOR_NORMAL,
         Hidden = GLFW_CURSOR_HIDDEN,
-        Disabled = GLFW_CURSOR_DISABLED
+        Disabled = GLFW_CURSOR_DISABLED,
     };
 
     struct CursorData
@@ -32,11 +32,15 @@ class Mouse
 
     void setCursorMode(const CursorMode &mode);
 
+    void setRawMode(const bool raw);
+
     void updateCursorData();
 
     const CursorMode &getCursorMode();
 
     const CursorData &getCursorData();
+
+    const bool isRawModeEnabled() const;
 
     static const bool isRawMotionSupported();
 
@@ -45,5 +49,6 @@ class Mouse
 
     CursorMode mode;
     CursorData data;
+    bool rawModeEnabled;
 };
 } // namespace vk

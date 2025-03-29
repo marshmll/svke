@@ -21,22 +21,29 @@ class Window
     Window &operator=(const Window &) = delete;
     ~Window();
 
+    [[nodiscard]]
     const bool shouldClose() const;
 
     void createSurface(VkInstance &instance, VkSurfaceKHR &surface);
 
     void pollEvents();
 
+    [[nodiscard]]
     GLFWwindow *&getHandle();
 
+    [[nodiscard]]
     const uint32_t getWidth() const;
 
+    [[nodiscard]]
     const uint32_t getHeight() const;
 
+    [[nodiscard]]
     VkExtent2D getExtent() const;
 
+    [[nodiscard]]
     const bool wasResized() const;
 
+    [[nodiscard]]
     const bool isFullscreen() const;
 
     void setResized(const bool resized);

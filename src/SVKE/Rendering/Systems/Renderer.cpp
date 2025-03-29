@@ -1,8 +1,9 @@
 #include "SVKE/Rendering/Systems/Renderer.hpp"
 
-vk::Renderer::Renderer(Device &device, Window &window, const Color &clear_color)
-    : device(device), window(window), clearColor(clear_color), currentImageIndex(0), currentFrameIndex(0),
-      frameInProgress(false)
+vk::Renderer::Renderer(Device &device, Window &window, const Swapchain::PresentMode &preferred_present_mode,
+                       const Color &clear_color)
+    : device(device), window(window), preferredPresentMode(preferred_present_mode), clearColor(clear_color),
+      currentImageIndex(0), currentFrameIndex(0), frameInProgress(false)
 {
     recreateSwapchain();
     createCommandBuffers();
@@ -190,16 +191,14 @@ void vk::Renderer::recreateSwapchain()
 
     if (!swapchain)
     {
-        swapchain = std::make_unique<Swapchain>(device, window);
+        swapchain = std::make_unique<Swapchain>(device, window, preferredPresentMode);
     }
     else
     {
         std::shared_ptr<Swapchain> old_swapchain = std::move(swapchain);
-        swapchain = std::make_unique<Swapchain>(device, window, old_swapchain);
+        swapchain = std::make_unique<Swapchain>(device, window, old_swapchain, preferredPresentMode);
 
         if (!old_swapchain->compatibleWith(*swapchain))
             throw std::runtime_error("vk::Renderer::recreateSwapchain: SWAPCHAIN IMAGE OR DEPTH FORMAT HAS CHANGED");
     }
-
-    // createPipeline();
 }
