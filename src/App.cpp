@@ -81,6 +81,7 @@ void vk::App::run()
             // Update
             GlobalUBO ubo = {};
             ubo.projectionViewMatrix = camera.getProjectionMatrix() * camera.getViewMatrix();
+            ubo.lightPosition = viewer.getTranslation();
             global_ubo_buffers[current_frame_index]->write((void *)&ubo, sizeof(ubo));
 
             // Render
@@ -117,23 +118,33 @@ void vk::App::createGlobalPool()
 
 void vk::App::loadObjects()
 {
+    std::shared_ptr<Model> quad_model = std::make_shared<Model>(*device);
+    if (!quad_model->loadFromFile("assets/models/quad.obj"))
+        throw std::runtime_error("vl::App::loadObjects: Failed to load Quad model");
+
     std::shared_ptr<Model> flat_vase_model = std::make_shared<Model>(*device);
     if (!flat_vase_model->loadFromFile("assets/models/flat_vase.obj"))
-        throw std::runtime_error("vl::App::loadObjects: Failed to load model");
+        throw std::runtime_error("vl::App::loadObjects: Failed to load Flat Vase model");
 
     std::shared_ptr<Model> smooth_vase_model = std::make_shared<Model>(*device);
     if (!smooth_vase_model->loadFromFile("assets/models/smooth_vase.obj"))
-        throw std::runtime_error("vl::App::loadObjects: Failed to load model");
+        throw std::runtime_error("vl::App::loadObjects: Failed to load Smooth Vase model");
+
+    Object floor;
+    floor.setModel(quad_model);
+    floor.setTranslation({0.f, 0.5f, 0.f});
+    floor.setScale({3.f, 1.f, 3.f});
+    objects.push_back(std::move(floor));
 
     Object flat_vase;
     flat_vase.setModel(flat_vase_model);
-    flat_vase.setTranslation({0.5f, 0.f, 0.f});
+    flat_vase.setTranslation({0.5f, 0.5f, 0.f});
     flat_vase.setScale({3.f, 3.f, 3.f});
     objects.push_back(std::move(flat_vase));
 
     Object smooth_vase;
     smooth_vase.setModel(smooth_vase_model);
-    smooth_vase.setTranslation({-0.5f, 0.f, 0.f});
+    smooth_vase.setTranslation({-0.5f, 0.5f, 0.f});
     smooth_vase.setScale({3.f, 3.f, 3.f});
     objects.push_back(std::move(smooth_vase));
 }

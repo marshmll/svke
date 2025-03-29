@@ -12,7 +12,9 @@ class App
     struct GlobalUBO
     {
         ALIGNAS_MAT4 glm::mat4 projectionViewMatrix{1.f};
-        ALIGNAS_VEC3 glm::vec3 lightDirection = glm::normalize(glm::vec3{1.f, -3.f, -1.f});
+        ALIGNAS_VEC4 glm::vec4 ambientLightColor{1.f, 1.f, 1.f, .2f};
+        ALIGNAS_VEC3 glm::vec3 lightPosition{-1.f};
+        ALIGNAS_VEC4 glm::vec4 lightColor{1.f}; // w component is light intensity
     };
 
     App();
