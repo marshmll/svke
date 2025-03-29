@@ -456,7 +456,7 @@ VkPresentModeKHR vk::Swapchain::choosePresentMode(const std::vector<VkPresentMod
     }
 
 #ifndef NDEBUG
-    std::cout << "USING PRESENT MODE: VSync" << std::endl;
+    std::cout << "REQUESTED PRESENT MODE NOT AVAILABLE, USING DEFAULT PRESENT MODE: VSync" << std::endl;
 #endif
 
     return VK_PRESENT_MODE_FIFO_KHR;
@@ -484,13 +484,19 @@ const std::string vk::Swapchain::presentModeName(const PresentMode &present_mode
 {
     switch (present_mode)
     {
-    case PresentMode::VSync:
-        return "VSync";
     case PresentMode::Immediate:
         return "Immediate";
     case PresentMode::Mailbox:
         return "Mailbox";
-    default:
-        return "Unknown";
+    case PresentMode::SharedContinuousRefresh:
+        return "Shared Continious Refresh";
+    case PresentMode::SharedDemandRefresh:
+        return "Shared Demand Refresh";
+    case PresentMode::VSync:
+        return "VSync";
+    case PresentMode::VSyncLatest:
+        return "VSync Latest";
+    case PresentMode::VSyncRelaxed:
+        return "VSync Relaxed";
     }
 }
