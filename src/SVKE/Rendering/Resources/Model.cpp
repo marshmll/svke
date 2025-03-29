@@ -6,12 +6,6 @@ vk::Model::Model(Device &device) : device(device), vertexCount(0), loaded(false)
 
 vk::Model::~Model()
 {
-    vkDeviceWaitIdle(device.getLogicalDevice());
-
-    if (hasIndexBuffer)
-        vmaDestroyBuffer(device.getAllocator(), indexBuffer, indexBufferMemory);
-
-    vmaDestroyBuffer(device.getAllocator(), vertexBuffer, vertexBufferMemory);
 }
 
 void vk::Model::loadFromData(const VertexArray &vertices)
@@ -105,13 +99,13 @@ void vk::Model::bind(VkCommandBuffer &command_buffer)
 {
     assert(loaded == true && "CANNOT BIND UNINITIALIZED MODEL");
 
-    VkBuffer buffers[] = {vertexBuffer};
+    VkBuffer buffers[] = {vertexBuffer->getBuffer()};
     VkDeviceSize offsets[] = {0};
 
     vkCmdBindVertexBuffers(command_buffer, 0, 1, buffers, offsets);
 
     if (hasIndexBuffer)
-        vkCmdBindIndexBuffer(command_buffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindIndexBuffer(command_buffer, indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
 }
 
 void vk::Model::draw(VkCommandBuffer &command_buffer)
@@ -184,29 +178,19 @@ void vk::Model::createVertexBuffers(const VertexArray &vertices)
 
     VkDeviceSize buffer_size = vertexCount * sizeof(Vertex);
 
-    VkBuffer staging_buffer;
-    VmaAllocation staging_buffer_allocation;
+    Buffer staging_buffer(device, buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO,
+                          VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
+                              VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 
-    device.createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
-                        staging_buffer, staging_buffer_allocation,
-                        VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
-                            VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+    staging_buffer.map();
+    staging_buffer.write((void *)vertices.data(), buffer_size);
+    staging_buffer.unmap();
 
-    // Fill the staging buffer with data
-    void *data;
-    vmaMapMemory(device.getAllocator(), staging_buffer_allocation, &data);
-    memcpy(data, vertices.data(), buffer_size);
-    vmaUnmapMemory(device.getAllocator(), staging_buffer_allocation);
+    vertexBuffer = std::make_unique<Buffer>(device, buffer_size,
+                                            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                                            VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
 
-    // Create a device buffer (device-local)
-    device.createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                        VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, vertexBuffer, vertexBufferMemory);
-
-    // Copy data from staging buffer to device buffer
-    device.copyBuffer(staging_buffer, vertexBuffer, buffer_size);
-
-    // Cleanup
-    vmaDestroyBuffer(device.getAllocator(), staging_buffer, staging_buffer_allocation);
+    staging_buffer.copyTo(*vertexBuffer, buffer_size);
 }
 
 void vk::Model::createIndexBuffers(const IndexArray &indices)
@@ -216,27 +200,17 @@ void vk::Model::createIndexBuffers(const IndexArray &indices)
 
     VkDeviceSize buffer_size = indexCount * sizeof(Index);
 
-    VkBuffer staging_buffer;
-    VmaAllocation staging_buffer_allocation;
+    Buffer staging_buffer(device, buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO,
+                          VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
+                              VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 
-    device.createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
-                        staging_buffer, staging_buffer_allocation,
-                        VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
-                            VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+    staging_buffer.map();
+    staging_buffer.write((void *)indices.data(), buffer_size);
+    staging_buffer.unmap();
 
-    // Fill the staging buffer with data
-    void *data;
-    vmaMapMemory(device.getAllocator(), staging_buffer_allocation, &data);
-    memcpy(data, indices.data(), buffer_size);
-    vmaUnmapMemory(device.getAllocator(), staging_buffer_allocation);
+    indexBuffer = std::make_unique<Buffer>(device, buffer_size,
+                                            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                                            VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
 
-    // Create a device buffer (device-local)
-    device.createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-                        VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, indexBuffer, indexBufferMemory);
-
-    // Copy data from staging buffer to device buffer
-    device.copyBuffer(staging_buffer, indexBuffer, buffer_size);
-
-    // Cleanup
-    vmaDestroyBuffer(device.getAllocator(), staging_buffer, staging_buffer_allocation);
+    staging_buffer.copyTo(*indexBuffer, buffer_size);
 }

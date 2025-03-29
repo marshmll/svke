@@ -8,10 +8,6 @@ vk::App::App()
     loadObjects();
 }
 
-vk::App::~App()
-{
-}
-
 void vk::App::run()
 {
     Camera camera;
@@ -68,7 +64,6 @@ void vk::App::run()
 void vk::App::createWindow()
 {
     window = std::make_unique<Window>(846, 484, "Simple Vulkan Engine");
-    window->setFullscreen(true);
 }
 
 void vk::App::createDevice()

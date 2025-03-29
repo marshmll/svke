@@ -21,8 +21,6 @@ class App
     App(const App &) = delete;
     App &operator=(const App &) = delete;
 
-    ~App();
-
     void run();
 
   private:

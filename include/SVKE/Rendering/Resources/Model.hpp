@@ -3,6 +3,7 @@
 #include "SVKE/Core/System/Device.hpp"
 #include "SVKE/Core/Graphics/Vertex.hpp"
 #include "SVKE/Utils/HashCombine.hpp"
+#include "SVKE/Core/System/Memory/Buffer.hpp"
 
 #include <vk_mem_alloc.h>
 #include <tiny_obj_loader.h>
@@ -56,12 +57,10 @@ class Model
   private:
     Device &device;
 
-    VkBuffer vertexBuffer;
-    VmaAllocation vertexBufferMemory;
+    std::unique_ptr<Buffer> vertexBuffer;
     uint32_t vertexCount;
 
-    VkBuffer indexBuffer;
-    VmaAllocation indexBufferMemory;
+    std::unique_ptr<Buffer> indexBuffer;
     uint32_t indexCount;
 
     bool loaded;
