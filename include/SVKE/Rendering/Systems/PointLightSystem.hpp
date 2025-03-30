@@ -21,20 +21,14 @@
 
 namespace vk
 {
-class RenderSystem
+class PointLightSystem
 {
-    struct PushConstantData
-    {
-        ALIGNAS_MAT4 glm::mat4 modelMatrix{1.f};
-        ALIGNAS_MAT4 glm::mat4 normalMatrix{1.f};
-    };
-
   public:
-    RenderSystem(Device &device, Renderer &renderer, DescriptorSetLayout &global_set_layout);
-    RenderSystem(const RenderSystem &) = delete;
-    RenderSystem &operator=(const RenderSystem &) = delete;
+    PointLightSystem(Device &device, Renderer &renderer, DescriptorSetLayout &global_set_layout);
+    PointLightSystem(const PointLightSystem &) = delete;
+    PointLightSystem &operator=(const PointLightSystem &) = delete;
 
-    ~RenderSystem();
+    ~PointLightSystem();
 
     void render(const FrameInfo &frame_info);
 

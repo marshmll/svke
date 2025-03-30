@@ -24,7 +24,7 @@ void vk::App::run()
     }
 
     auto global_set_layout = DescriptorSetLayout::Builder(*device)
-                                 .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+                                 .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
                                  .build();
 
     std::vector<VkDescriptorSet> global_descriptor_sets(Swapchain::MAX_FRAMES_IN_FLIGHT);
@@ -44,6 +44,8 @@ void vk::App::run()
     MovementController camera_controller(keyboard, mouse);
 
     RenderSystem render_system(*device, *renderer, *global_set_layout);
+    PointLightSystem point_light_system(*device, *renderer, *global_set_layout);
+
     Timer delta_timer;
 
     if (Mouse::isRawMotionSupported())
@@ -80,18 +82,21 @@ void vk::App::run()
         {
             auto current_frame_index = renderer->getCurrentFrameIndex();
 
-            FrameInfo frame_info{current_frame_index, dt, command_buffer, camera,
-                                 global_descriptor_sets[current_frame_index]};
+            FrameInfo frame_info{
+                current_frame_index, dt, command_buffer, camera, global_descriptor_sets[current_frame_index], objects};
 
             // Update
             GlobalUBO ubo = {};
-            ubo.projectionViewMatrix = camera.getProjectionMatrix() * camera.getViewMatrix();
-            ubo.lightPosition = viewer.getTranslation();
+            ubo.projectionMatrix = camera.getProjectionMatrix();
+            ubo.viewMatrix = camera.getViewMatrix();
             global_ubo_buffers[current_frame_index]->write((void *)&ubo, sizeof(ubo));
 
             // Render
             renderer->beginRenderPass(command_buffer);
-            render_system.render(frame_info, objects);
+
+            render_system.render(frame_info);
+            point_light_system.render(frame_info);
+
             renderer->endRenderPass(command_buffer);
             renderer->endFrame();
         }
@@ -142,17 +147,17 @@ void vk::App::loadObjects()
     floor.setModel(quad_model);
     floor.setTranslation({0.f, 0.5f, 0.f});
     floor.setScale({3.f, 1.f, 3.f});
-    objects.push_back(std::move(floor));
+    objects[floor.getId()] = std::move(floor);
 
     Object flat_vase;
     flat_vase.setModel(flat_vase_model);
     flat_vase.setTranslation({0.5f, 0.5f, 0.f});
     flat_vase.setScale({3.f, 3.f, 3.f});
-    objects.push_back(std::move(flat_vase));
+    objects[flat_vase.getId()] = std::move(flat_vase);
 
     Object smooth_vase;
     smooth_vase.setModel(smooth_vase_model);
     smooth_vase.setTranslation({-0.5f, 0.5f, 0.f});
     smooth_vase.setScale({3.f, 3.f, 3.f});
-    objects.push_back(std::move(smooth_vase));
+    objects[smooth_vase.getId()] = std::move(smooth_vase);
 }

@@ -7,6 +7,7 @@
 #include <GLFW/glfw3.h>
 
 #include "SVKE/Rendering/Camera.hpp"
+#include "SVKE/Rendering/Resources/Object.hpp"
 
 namespace vk
 {
@@ -17,5 +18,6 @@ struct FrameInfo
     VkCommandBuffer &commandBuffer;
     Camera &camera;
     VkDescriptorSet &globalDescriptorSet;
+    Object::Map &objects;
 };
 } // namespace vk

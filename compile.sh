@@ -1,2 +1,11 @@
-/usr/bin/glslc assets/shaders/vertex.vert -o assets/shaders/vertex.spv
-/usr/bin/glslc assets/shaders/fragment.frag -o assets/shaders/fragment.spv
+#!/bin/bash
+
+for i in `find assets/shaders -name "*.vert" -type f`; do
+    echo "Compiling $i to $i.spv"
+    glslc $i -o $i.spv
+done
+
+for i in `find assets/shaders -name "*.frag" -type f`; do
+    echo "Compiling $i to $i.spv"
+    glslc $i -o $i.spv
+done

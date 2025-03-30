@@ -11,7 +11,8 @@ class App
   public:
     struct GlobalUBO
     {
-        ALIGNAS_MAT4 glm::mat4 projectionViewMatrix{1.f};
+        ALIGNAS_MAT4 glm::mat4 projectionMatrix{1.f};
+        ALIGNAS_MAT4 glm::mat4 viewMatrix{1.f};
         ALIGNAS_VEC4 glm::vec4 ambientLightColor{1.f, 1.f, 1.f, .2f};
         ALIGNAS_VEC3 glm::vec3 lightPosition{-1.f};
         ALIGNAS_VEC4 glm::vec4 lightColor{1.f}; // w component is light intensity
@@ -30,7 +31,7 @@ class App
     std::unique_ptr<Device> device;
     std::unique_ptr<Renderer> renderer;
     std::unique_ptr<DescriptorPool> globalPool;
-    std::vector<Object> objects;
+    Object::Map objects;
 
     void createWindow();
 

@@ -18,13 +18,14 @@ target_compile_features(svke PRIVATE cxx_std_17 c_std_99)
 
 target_link_libraries(svke PRIVATE vulkan glfw glm shaderc)
 
-add_custom_target(copy_assets
+add_custom_target(assets
     COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
         "${CMAKE_SOURCE_DIR}/assets/"
         "${CMAKE_BINARY_DIR}/assets"
-    COMMENT "Copying assets folder"
+    COMMAND ${CMAKE_SOURCE_DIR}/compile.sh
+    COMMENT "Compiling shaders and copying assets"
 )
 
-add_dependencies(svke copy_assets)
+add_dependencies(svke assets)
 
 install(TARGETS svke)

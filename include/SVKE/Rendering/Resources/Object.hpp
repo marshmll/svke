@@ -20,6 +20,9 @@ namespace vk
 class Object
 {
   public:
+    using objid_t = uint32_t;
+    using Map = std::unordered_map<objid_t, Object>;
+
     struct TransformComponent
     {
         glm::vec3 translation{};
@@ -47,6 +50,8 @@ class Object
 
     glm::mat3 normalMatrix();
 
+    const objid_t &getId() const;
+
     const Color &getColor() const;
 
     const std::shared_ptr<Model> &getModel() const;
@@ -70,6 +75,7 @@ class Object
     void setRotation(const glm::vec3 &rotation);
 
   protected:
+    objid_t id;
     std::shared_ptr<Model> model;
     Color color;
     TransformComponent transformComponent;

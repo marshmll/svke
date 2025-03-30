@@ -2,10 +2,16 @@
 
 vk::Object::Object(const Color &color) : color(color)
 {
+    static objid_t GLOBAL_ID_COUNTER = 0;
+
+    id = GLOBAL_ID_COUNTER++;
 }
 
 vk::Object::Object(std::shared_ptr<Model> &model, const Color &color) : model(model), color(color)
 {
+    static objid_t GLOBAL_ID_COUNTER = 0;
+
+    id = GLOBAL_ID_COUNTER++;
 }
 
 void vk::Object::bind(VkCommandBuffer &command_buffer)
@@ -32,6 +38,11 @@ glm::mat4 vk::Object::transform()
 glm::mat3 vk::Object::normalMatrix()
 {
     return transformComponent.normalMatrix();
+}
+
+const vk::Object::objid_t &vk::Object::getId() const
+{
+    return id;
 }
 
 const glm::vec3 &vk::Object::getTranslation() const

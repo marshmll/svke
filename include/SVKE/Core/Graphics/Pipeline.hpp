@@ -21,6 +21,9 @@ class Pipeline
         Config(const Config &) = delete;
         Config &operator=(const Config &) = delete;
 
+        std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+        std::vector<VkVertexInputBindingDescription> bindingDescriptions;
+
         VkPipelineViewportStateCreateInfo viewportInfo;
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
         VkPipelineRasterizationStateCreateInfo rasterizationInfo;

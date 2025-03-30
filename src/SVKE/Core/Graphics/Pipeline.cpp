@@ -46,6 +46,10 @@ void vk::Pipeline::bind(VkCommandBuffer &command_buffer)
 
 void vk::Pipeline::defaultPipelineConfig(Config &config)
 {
+    /* VERTEX DESCRIPTIONS --------------------------------------------------------------------------------- */
+    config.attributeDescriptions = Vertex::getAttributeDescriptions();
+    config.bindingDescriptions = Vertex::getBindingDescriptions();
+
     /* VIEWPORT -------------------------------------------------------------------------------------------- */
     config.viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     config.viewportInfo.viewportCount = 1;
@@ -145,8 +149,8 @@ void vk::Pipeline::createGraphicsPipeline(const Config &config, Shader &vert_sha
     shader_stages[1].pSpecializationInfo = nullptr;
 
     VkPipelineVertexInputStateCreateInfo vertex_input_info = {};
-    auto attribute_descriptions = Vertex::getAttributeDescriptions();
-    auto binding_descriptions = Vertex::getBindingDescriptions();
+    auto &attribute_descriptions = config.attributeDescriptions;
+    auto &binding_descriptions = config.bindingDescriptions;
     vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertex_input_info.vertexAttributeDescriptionCount = static_cast<uint32_t>(attribute_descriptions.size());
     vertex_input_info.vertexBindingDescriptionCount = static_cast<uint32_t>(binding_descriptions.size());

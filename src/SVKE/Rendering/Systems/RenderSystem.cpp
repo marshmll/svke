@@ -13,14 +13,14 @@ vk::RenderSystem::~RenderSystem()
     vkDestroyPipelineLayout(device.getLogicalDevice(), pipelineLayout, nullptr);
 }
 
-void vk::RenderSystem::render(const FrameInfo &frame_info, std::vector<Object> &objects)
+void vk::RenderSystem::render(const FrameInfo &frame_info)
 {
     pipeline->bind(frame_info.commandBuffer);
 
     vkCmdBindDescriptorSets(frame_info.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
                             &frame_info.globalDescriptorSet, 0, nullptr);
 
-    for (auto &object : objects)
+    for (auto &[_, object] : frame_info.objects)
     {
         PushConstantData push = {};
         push.modelMatrix = object.transform();
@@ -37,8 +37,8 @@ void vk::RenderSystem::render(const FrameInfo &frame_info, std::vector<Object> &
 
 void vk::RenderSystem::loadShaders()
 {
-    vertShader = std::make_unique<Shader>(device, "assets/shaders/vertex.spv");
-    fragShader = std::make_unique<Shader>(device, "assets/shaders/fragment.spv");
+    vertShader = std::make_unique<Shader>(device, "assets/shaders/render_system.vert.spv");
+    fragShader = std::make_unique<Shader>(device, "assets/shaders/render_system.frag.spv");
 }
 
 void vk::RenderSystem::createPipelineLayout(DescriptorSetLayout &global_set_layout)
