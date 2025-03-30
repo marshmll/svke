@@ -69,7 +69,7 @@ void vk::App::run()
             mouse.setCursorMode(Mouse::CursorMode::Disabled);
 
         const float aspect_ratio = renderer->getAspectRatio();
-        camera.setPerspectiveProjection(glm::radians(50.f), aspect_ratio, .001f, 1000.f);
+        camera.setPerspectiveProjection(Angle::toRadians(50.f), aspect_ratio, .001f, 1000.f);
 
         const float dt = glm::min(delta_timer.getElapsedTimeAsSeconds(), 0.25f);
         delta_timer.restart();
@@ -176,7 +176,7 @@ void vk::App::loadObjects()
         generator.setModel(generator_model);
         generator.setTranslation({0.f, -0.5f, 3.f});
         generator.setScale({0.5f, 0.5f, 0.5f});
-        generator.setRotation({0.f, glm::radians(90.f), 0.f});
+        generator.setRotation({0.f, Angle::Rad90, 0.f});
         objects[generator.getId()] = std::move(generator);
     }
 
@@ -190,9 +190,9 @@ void vk::App::loadObjects()
         point_light.setColor(light_colors[i]);
 
         auto rotate_light =
-            glm::rotate(glm::mat4{1.f}, (i * glm::two_pi<float>()) / light_colors.size(), {0.f, -1.f, 0.f});
+            Matrix::rotate(Matrix::identityMat4f(), (i * Angle::Rad360) / light_colors.size(), {0.f, -1.f, 0.f});
 
-        point_light.setTranslation(glm::vec3(rotate_light * glm::vec4(-1.f, -1.f, -1.f, 1.f)));
+        point_light.setTranslation(Vec3f(rotate_light * Vec4f(-1.5f, -1.5f, -1.5f, 1.f)));
         objects[point_light.getId()] = std::move(point_light);
     }
 }

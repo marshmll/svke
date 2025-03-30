@@ -1,11 +1,20 @@
 #!/bin/bash
 
-for i in `find assets/shaders -name "*.vert" -type f`; do
-    echo "Compiling $i to $i.spv"
-    glslc $i -o $i.spv
-done
+if [[ -d $1 && -d $2 ]]
+then
+    diff -r -q "$1/assets/shaders" "$2/assets/shaders"
+    differ=$?
 
-for i in `find assets/shaders -name "*.frag" -type f`; do
-    echo "Compiling $i to $i.spv"
-    glslc $i -o $i.spv
-done
+    if [[ $differ -eq 1 ]]
+    then
+        for i in `find assets/shaders -name "*.vert" -type f`; do
+            echo "Compiling $i to $i.spv"
+            glslc $i -o $i.spv
+        done
+
+        for i in `find assets/shaders -name "*.frag" -type f`; do
+            echo "Compiling $i to $i.spv"
+            glslc $i -o $i.spv
+        done
+    fi
+fi
