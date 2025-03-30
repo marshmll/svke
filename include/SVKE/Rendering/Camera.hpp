@@ -28,8 +28,13 @@ class Camera
 
     const Mat4f &getViewMatrix() const;
 
+    const Mat4f &getInverseViewMatrix() const;
+
+    const Vec3f getPosition() const;
+
   private:
     Mat4f projectionMatrix;
     Mat4f viewMatrix;
+    Mat4f inverseViewMatrix;
 };
 } // namespace vk

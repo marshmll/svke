@@ -24,6 +24,7 @@ struct GlobalUBO
 {
     ALIGNAS_MAT4 Mat4f projectionMatrix{1.f};
     ALIGNAS_MAT4 Mat4f viewMatrix{1.f};
+    ALIGNAS_MAT4 Mat4f inverseViewMatrix{1.f};
     ALIGNAS_VEC4 Vec4f ambientLightColor{1.f, 1.f, 1.f, .01f}; // w = intensity
     ALIGNAS_NESTED_UNIFORM PointLight pointLights[MAX_LIGHTS];
     ALIGNAS_SCLR(int) int numLights;

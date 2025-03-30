@@ -11,8 +11,6 @@
 #include "SVKE/Rendering/Systems/Renderer.hpp"
 #include "SVKE/Rendering/Descriptors/DescriptorSetLayout.hpp"
 
-#include <array>
-
 namespace vk
 {
 class PointLightSystem

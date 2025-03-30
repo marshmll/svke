@@ -89,6 +89,7 @@ void vk::App::run()
             GlobalUBO ubo = {};
             ubo.projectionMatrix = camera.getProjectionMatrix();
             ubo.viewMatrix = camera.getViewMatrix();
+            ubo.inverseViewMatrix = camera.getInverseViewMatrix();
 
             point_light_system.update(frame_info, ubo);
 
@@ -97,6 +98,7 @@ void vk::App::run()
             // Render
             renderer->beginRenderPass(command_buffer);
 
+            // Order matters!
             render_system.render(frame_info);
             point_light_system.render(frame_info);
 

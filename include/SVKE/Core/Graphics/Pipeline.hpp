@@ -18,6 +18,7 @@ class Pipeline
   public:
     struct Config
     {
+        Config() = default;
         Config(const Config &) = delete;
         Config &operator=(const Config &) = delete;
 
@@ -52,6 +53,8 @@ class Pipeline
     void bind(VkCommandBuffer &command_buffer);
 
     static void defaultPipelineConfig(Config &config);
+
+    static void enableAlphaBlending(Config &config);
 
   private:
     Device &device;

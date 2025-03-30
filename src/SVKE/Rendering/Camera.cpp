@@ -1,6 +1,6 @@
 #include "SVKE/Rendering/Camera.hpp"
 
-vk::Camera::Camera() : projectionMatrix(1.f), viewMatrix(1.f)
+vk::Camera::Camera() : projectionMatrix(1.f), viewMatrix(1.f), inverseViewMatrix(1.f)
 {
 }
 
@@ -51,19 +51,19 @@ void vk::Camera::setViewDirection(const Vec3f &position, const Vec3f &direction,
     viewMatrix[3][1] = -glm::dot(v, position);
     viewMatrix[3][2] = -glm::dot(w, position);
 
-    // inverseViewMatrix = Mat4f{1.f};
-    // inverseViewMatrix[0][0] = u.x;
-    // inverseViewMatrix[0][1] = u.y;
-    // inverseViewMatrix[0][2] = u.z;
-    // inverseViewMatrix[1][0] = v.x;
-    // inverseViewMatrix[1][1] = v.y;
-    // inverseViewMatrix[1][2] = v.z;
-    // inverseViewMatrix[2][0] = w.x;
-    // inverseViewMatrix[2][1] = w.y;
-    // inverseViewMatrix[2][2] = w.z;
-    // inverseViewMatrix[3][0] = position.x;
-    // inverseViewMatrix[3][1] = position.y;
-    // inverseViewMatrix[3][2] = position.z;
+    inverseViewMatrix = Mat4f{1.f};
+    inverseViewMatrix[0][0] = u.x;
+    inverseViewMatrix[0][1] = u.y;
+    inverseViewMatrix[0][2] = u.z;
+    inverseViewMatrix[1][0] = v.x;
+    inverseViewMatrix[1][1] = v.y;
+    inverseViewMatrix[1][2] = v.z;
+    inverseViewMatrix[2][0] = w.x;
+    inverseViewMatrix[2][1] = w.y;
+    inverseViewMatrix[2][2] = w.z;
+    inverseViewMatrix[3][0] = position.x;
+    inverseViewMatrix[3][1] = position.y;
+    inverseViewMatrix[3][2] = position.z;
 }
 
 void vk::Camera::setViewTarget(const Vec3f &position, const Vec3f &target, const Vec3f &up)
@@ -96,19 +96,24 @@ void vk::Camera::setViewYXZ(const Vec3f &position, const Vec3f &rotation)
     viewMatrix[3][1] = -glm::dot(v, position);
     viewMatrix[3][2] = -glm::dot(w, position);
 
-    // inverseViewMatrix = Mat4f{1.f};
-    // inverseViewMatrix[0][0] = u.x;
-    // inverseViewMatrix[0][1] = u.y;
-    // inverseViewMatrix[0][2] = u.z;
-    // inverseViewMatrix[1][0] = v.x;
-    // inverseViewMatrix[1][1] = v.y;
-    // inverseViewMatrix[1][2] = v.z;
-    // inverseViewMatrix[2][0] = w.x;
-    // inverseViewMatrix[2][1] = w.y;
-    // inverseViewMatrix[2][2] = w.z;
-    // inverseViewMatrix[3][0] = position.x;
-    // inverseViewMatrix[3][1] = position.y;
-    // inverseViewMatrix[3][2] = position.z;
+    inverseViewMatrix = Mat4f{1.f};
+    inverseViewMatrix[0][0] = u.x;
+    inverseViewMatrix[0][1] = u.y;
+    inverseViewMatrix[0][2] = u.z;
+    inverseViewMatrix[1][0] = v.x;
+    inverseViewMatrix[1][1] = v.y;
+    inverseViewMatrix[1][2] = v.z;
+    inverseViewMatrix[2][0] = w.x;
+    inverseViewMatrix[2][1] = w.y;
+    inverseViewMatrix[2][2] = w.z;
+    inverseViewMatrix[3][0] = position.x;
+    inverseViewMatrix[3][1] = position.y;
+    inverseViewMatrix[3][2] = position.z;
+}
+
+const vk::Vec3f vk::Camera::getPosition() const
+{
+    return Vec3f(inverseViewMatrix[3]);
 }
 
 const vk::Mat4f &vk::Camera::getProjectionMatrix() const
@@ -119,4 +124,9 @@ const vk::Mat4f &vk::Camera::getProjectionMatrix() const
 const vk::Mat4f &vk::Camera::getViewMatrix() const
 {
     return viewMatrix;
+}
+
+const vk::Mat4f &vk::Camera::getInverseViewMatrix() const
+{
+    return inverseViewMatrix;
 }

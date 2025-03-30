@@ -2,8 +2,13 @@
 
 if [[ -d $1 && -d $2 ]]
 then
-    diff -r -q "$1/assets" "$2/assets"
-    differ=$?
+    differ=1
+
+    if [[ -d "$1/assets" && -d "$2/assets" ]]
+    then
+        diff -r -q "$1/assets" "$2/assets"
+        differ=$?
+    fi
 
     if [[ $differ -eq 1 ]]
     then

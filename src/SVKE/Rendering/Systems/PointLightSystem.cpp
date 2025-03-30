@@ -27,7 +27,7 @@ void vk::PointLightSystem::update(const FrameInfo &frame_info, GlobalUBO &ubo)
         assert(light_index < MAX_LIGHTS && "POINT LIGHTS EXCEEDED MAXIMUM SPECIFIED");
 
         // Update
-        object.setTranslation(Vec3f{rotate_light * Vec4f{object.getTranslation(), 1.0}});
+        // object.setTranslation(Vec3f{rotate_light * Vec4f{object.getTranslation(), 1.0}});
 
         // Copy data to UBO
         ubo.pointLights[light_index].position = object.getTranslation();
@@ -42,15 +42,28 @@ void vk::PointLightSystem::update(const FrameInfo &frame_info, GlobalUBO &ubo)
 
 void vk::PointLightSystem::render(const FrameInfo &frame_info)
 {
-    pipeline->bind(frame_info.commandBuffer);
-
-    vkCmdBindDescriptorSets(frame_info.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
-                            &frame_info.globalDescriptorSet, 0, nullptr);
+    // Sort lights
+    std::map<float, Object::objid_t> sorted;
 
     for (auto &[_, object] : frame_info.objects)
     {
         if (!object.getPointLightComponent())
             continue;
+
+        // calculate distance
+        Vec3f offset = frame_info.camera.getPosition() - object.getTranslation();
+        float dis_squared = Vector::dot(offset, offset);
+        sorted[dis_squared] = object.getId();
+    }
+
+    pipeline->bind(frame_info.commandBuffer);
+
+    vkCmdBindDescriptorSets(frame_info.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
+                            &frame_info.globalDescriptorSet, 0, nullptr);
+
+    for (auto it = sorted.rbegin(); it != sorted.rend(); ++it)
+    {
+        auto &object = frame_info.objects.at(it->second);
 
         PointLightPushConstant push = {};
         push.position = object.getTranslation();
@@ -98,6 +111,7 @@ void vk::PointLightSystem::createPipeline(VkRenderPass render_pass)
 
     Pipeline::Config pipeline_config = {};
     Pipeline::defaultPipelineConfig(pipeline_config);
+    Pipeline::enableAlphaBlending(pipeline_config);
 
     pipeline_config.attributeDescriptions.clear();
     pipeline_config.bindingDescriptions.clear();
