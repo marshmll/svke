@@ -14,6 +14,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <memory>
+#include <optional>
 
 namespace vk
 {
@@ -34,6 +35,11 @@ class Object
         // More: https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix
         glm::mat4 mat4();
         glm::mat3 normalMatrix();
+    };
+
+    struct PointLightComponent
+    {
+        float lightIntensity;
     };
 
     Object(const Color &color = COLOR_WHITE);
@@ -58,6 +64,8 @@ class Object
 
     const TransformComponent &getTransformComponent() const;
 
+    const std::optional<PointLightComponent> &getPointLightComponent() const;
+
     const glm::vec3 &getTranslation() const;
 
     const glm::vec3 &getScale() const;
@@ -74,10 +82,18 @@ class Object
 
     void setRotation(const glm::vec3 &rotation);
 
+    void createPointLightComponent(const PointLightComponent &component);
+
+    static Object makePointLight(const float intensity = 10.f, const float radius = 0.1f,
+                                 const Color color = COLOR_WHITE);
+
   protected:
     objid_t id;
-    std::shared_ptr<Model> model;
     Color color;
     TransformComponent transformComponent;
+
+    // Optional
+    std::shared_ptr<Model> model;
+    std::optional<PointLightComponent> pointLightComponent;
 };
 } // namespace vk

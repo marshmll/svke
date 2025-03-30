@@ -69,7 +69,7 @@ void vk::App::run()
             mouse.setCursorMode(Mouse::CursorMode::Disabled);
 
         const float aspect_ratio = renderer->getAspectRatio();
-        camera.setPerspectiveProjection(glm::radians(50.f), aspect_ratio, .001f, 100.f);
+        camera.setPerspectiveProjection(glm::radians(50.f), aspect_ratio, .001f, 1000.f);
 
         const float dt = glm::min(delta_timer.getElapsedTimeAsSeconds(), 0.25f);
         delta_timer.restart();
@@ -89,6 +89,9 @@ void vk::App::run()
             GlobalUBO ubo = {};
             ubo.projectionMatrix = camera.getProjectionMatrix();
             ubo.viewMatrix = camera.getViewMatrix();
+
+            point_light_system.update(frame_info, ubo);
+
             global_ubo_buffers[current_frame_index]->write((void *)&ubo, sizeof(ubo));
 
             // Render
@@ -131,33 +134,65 @@ void vk::App::createGlobalPool()
 
 void vk::App::loadObjects()
 {
-    std::shared_ptr<Model> quad_model = std::make_shared<Model>(*device);
-    if (!quad_model->loadFromFile("assets/models/quad.obj"))
-        throw std::runtime_error("vl::App::loadObjects: Failed to load Quad model");
+    {
+        std::shared_ptr<Model> quad_model = std::make_shared<Model>(*device);
+        if (!quad_model->loadFromFile("assets/models/quad.obj"))
+            throw std::runtime_error("vl::App::loadObjects: Failed to load Quad model");
 
-    std::shared_ptr<Model> flat_vase_model = std::make_shared<Model>(*device);
-    if (!flat_vase_model->loadFromFile("assets/models/flat_vase.obj"))
-        throw std::runtime_error("vl::App::loadObjects: Failed to load Flat Vase model");
+        Object floor;
+        floor.setModel(quad_model);
+        floor.setTranslation({0.f, 0.5f, 0.f});
+        floor.setScale({8.f, 1.f, 8.f});
+        objects[floor.getId()] = std::move(floor);
+    }
+    {
+        std::shared_ptr<Model> flat_vase_model = std::make_shared<Model>(*device);
+        if (!flat_vase_model->loadFromFile("assets/models/flat_vase.obj"))
+            throw std::runtime_error("vl::App::loadObjects: Failed to load Flat Vase model");
 
-    std::shared_ptr<Model> smooth_vase_model = std::make_shared<Model>(*device);
-    if (!smooth_vase_model->loadFromFile("assets/models/smooth_vase.obj"))
-        throw std::runtime_error("vl::App::loadObjects: Failed to load Smooth Vase model");
+        Object flat_vase;
+        flat_vase.setModel(flat_vase_model);
+        flat_vase.setTranslation({0.5f, 0.5f, 0.f});
+        flat_vase.setScale({3.f, 3.f, 3.f});
+        objects[flat_vase.getId()] = std::move(flat_vase);
+    }
+    {
+        std::shared_ptr<Model> smooth_vase_model = std::make_shared<Model>(*device);
+        if (!smooth_vase_model->loadFromFile("assets/models/smooth_vase.obj"))
+            throw std::runtime_error("vl::App::loadObjects: Failed to load Smooth Vase model");
 
-    Object floor;
-    floor.setModel(quad_model);
-    floor.setTranslation({0.f, 0.5f, 0.f});
-    floor.setScale({3.f, 1.f, 3.f});
-    objects[floor.getId()] = std::move(floor);
+        Object smooth_vase;
+        smooth_vase.setModel(smooth_vase_model);
+        smooth_vase.setTranslation({-0.5f, 0.5f, 0.f});
+        smooth_vase.setScale({3.f, 3.f, 3.f});
+        objects[smooth_vase.getId()] = std::move(smooth_vase);
+    }
+    {
+        std::shared_ptr<Model> generator_model = std::make_shared<Model>(*device);
+        if (!generator_model->loadFromFile("assets/models/emergency_backup_generator.obj"))
+            throw std::runtime_error("vl::App::loadObjects: Failed to load Emergency Backup Generator model");
 
-    Object flat_vase;
-    flat_vase.setModel(flat_vase_model);
-    flat_vase.setTranslation({0.5f, 0.5f, 0.f});
-    flat_vase.setScale({3.f, 3.f, 3.f});
-    objects[flat_vase.getId()] = std::move(flat_vase);
+        Object generator;
+        generator.setModel(generator_model);
+        generator.setTranslation({0.f, -0.5f, 3.f});
+        generator.setScale({0.5f, 0.5f, 0.5f});
+        generator.setRotation({0.f, glm::radians(90.f), 0.f});
+        objects[generator.getId()] = std::move(generator);
+    }
 
-    Object smooth_vase;
-    smooth_vase.setModel(smooth_vase_model);
-    smooth_vase.setTranslation({-0.5f, 0.5f, 0.f});
-    smooth_vase.setScale({3.f, 3.f, 3.f});
-    objects[smooth_vase.getId()] = std::move(smooth_vase);
+    std::vector<Color> light_colors{COLOR_RED,  COLOR_ORANGE, COLOR_YELLOW, COLOR_GREEN,
+                                    COLOR_CYAN, COLOR_BLUE,   COLOR_PURPLE};
+
+    for (int i = 0; i < light_colors.size(); i++)
+    {
+        Object point_light = Object::makePointLight(0.4f);
+
+        point_light.setColor(light_colors[i]);
+
+        auto rotate_light =
+            glm::rotate(glm::mat4{1.f}, (i * glm::two_pi<float>()) / light_colors.size(), {0.f, -1.f, 0.f});
+
+        point_light.setTranslation(glm::vec3(rotate_light * glm::vec4(-1.f, -1.f, -1.f, 1.f)));
+        objects[point_light.getId()] = std::move(point_light);
+    }
 }

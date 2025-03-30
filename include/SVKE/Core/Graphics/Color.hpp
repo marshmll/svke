@@ -22,6 +22,7 @@
 #define COLOR_GREEN  vk::Color(0,   255, 0,   255)
 #define COLOR_BLUE   vk::Color(0,   0,   255, 255)
 #define COLOR_YELLOW vk::Color(255, 255, 0,   255)
+#define COLOR_ORANGE vk::Color(255, 165, 0,   255)
 #define COLOR_CYAN   vk::Color(0,   255, 255, 255)
 #define COLOR_PURPLE vk::Color(255, 0,   255, 255)
 #define COLOR_WHITE  vk::Color(255, 255, 255, 255)

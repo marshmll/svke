@@ -24,12 +24,20 @@ namespace vk
 class PointLightSystem
 {
   public:
+    struct PointLightPushConstant
+    {
+        ALIGNAS_VEC3 glm::vec3 position{};
+        ALIGNAS_VEC4 glm::vec4 color; // w = intensity
+        ALIGNAS_SCLR(float) float radius;
+    };
+
     PointLightSystem(Device &device, Renderer &renderer, DescriptorSetLayout &global_set_layout);
     PointLightSystem(const PointLightSystem &) = delete;
     PointLightSystem &operator=(const PointLightSystem &) = delete;
 
     ~PointLightSystem();
 
+    void update(const FrameInfo &frame_info, GlobalUBO &ubo);
     void render(const FrameInfo &frame_info);
 
   private:

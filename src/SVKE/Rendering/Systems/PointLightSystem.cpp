@@ -13,6 +13,31 @@ vk::PointLightSystem::~PointLightSystem()
     vkDestroyPipelineLayout(device.getLogicalDevice(), pipelineLayout, nullptr);
 }
 
+void vk::PointLightSystem::update(const FrameInfo &frame_info, GlobalUBO &ubo)
+{
+    auto rotate_light = glm::rotate(glm::mat4{1.f}, frame_info.dt, {0.f, -1.f, 0.f});
+
+    int light_index = 0;
+
+    for (auto &[_, object] : frame_info.objects)
+    {
+        if (!object.getPointLightComponent())
+            continue;
+
+        // Update
+        object.setTranslation(glm::vec3{rotate_light * glm::vec4{object.getTranslation(), 1.0}});
+
+        // Copy data to UBO
+        ubo.pointLights[light_index].position = object.getTranslation();
+        ubo.pointLights[light_index].color =
+            glm::vec4{object.getColor().toVec3(), object.getPointLightComponent()->lightIntensity};
+
+        ++light_index;
+    }
+
+    ubo.numLights = light_index;
+}
+
 void vk::PointLightSystem::render(const FrameInfo &frame_info)
 {
     pipeline->bind(frame_info.commandBuffer);
@@ -20,7 +45,22 @@ void vk::PointLightSystem::render(const FrameInfo &frame_info)
     vkCmdBindDescriptorSets(frame_info.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
                             &frame_info.globalDescriptorSet, 0, nullptr);
 
-    vkCmdDraw(frame_info.commandBuffer, 6, 1, 0, 0);
+    for (auto &[_, object] : frame_info.objects)
+    {
+        if (!object.getPointLightComponent())
+            continue;
+
+        PointLightPushConstant push = {};
+        push.position = object.getTranslation();
+        push.color = glm::vec4{object.getColor().toVec3(), object.getPointLightComponent()->lightIntensity};
+        push.radius = object.getScale().x;
+
+        vkCmdPushConstants(frame_info.commandBuffer, pipelineLayout,
+                           VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PointLightPushConstant),
+                           &push);
+
+        vkCmdDraw(frame_info.commandBuffer, 6, 1, 0, 0);
+    }
 }
 
 void vk::PointLightSystem::loadShaders()
@@ -31,10 +71,10 @@ void vk::PointLightSystem::loadShaders()
 
 void vk::PointLightSystem::createPipelineLayout(DescriptorSetLayout &global_set_layout)
 {
-    // VkPushConstantRange push_constant_range = {};
-    // push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-    // push_constant_range.offset = 0;
-    // push_constant_range.size = sizeof(PushConstantData);
+    VkPushConstantRange push_constant_range = {};
+    push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    push_constant_range.offset = 0;
+    push_constant_range.size = sizeof(PointLightPushConstant);
 
     std::vector<VkDescriptorSetLayout> global_set_layouts{global_set_layout.getDescriptorSetLayout()};
 
@@ -42,8 +82,8 @@ void vk::PointLightSystem::createPipelineLayout(DescriptorSetLayout &global_set_
     pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipeline_layout_info.setLayoutCount = static_cast<uint32_t>(global_set_layouts.size());
     pipeline_layout_info.pSetLayouts = global_set_layouts.data();
-    pipeline_layout_info.pushConstantRangeCount = 0;
-    pipeline_layout_info.pPushConstantRanges = nullptr;
+    pipeline_layout_info.pushConstantRangeCount = 1;
+    pipeline_layout_info.pPushConstantRanges = &push_constant_range;
 
     if (vkCreatePipelineLayout(device.getLogicalDevice(), &pipeline_layout_info, nullptr, &pipelineLayout) !=
         VK_SUCCESS)

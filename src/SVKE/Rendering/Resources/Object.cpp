@@ -40,6 +40,11 @@ glm::mat3 vk::Object::normalMatrix()
     return transformComponent.normalMatrix();
 }
 
+const std::optional<vk::Object::PointLightComponent> &vk::Object::getPointLightComponent() const
+{
+    return pointLightComponent;
+}
+
 const vk::Object::objid_t &vk::Object::getId() const
 {
     return id;
@@ -98,6 +103,21 @@ void vk::Object::setScale(const glm::vec3 &scale)
 void vk::Object::setRotation(const glm::vec3 &rotation)
 {
     transformComponent.rotation = rotation;
+}
+
+void vk::Object::createPointLightComponent(const PointLightComponent &component)
+{
+    pointLightComponent = component;
+}
+
+vk::Object vk::Object::makePointLight(const float intensity, const float radius, const Color color)
+{
+    Object point_light;
+    point_light.setColor(color);
+    point_light.setScale({radius, 1.f, 1.f});
+    point_light.createPointLightComponent({intensity});
+
+    return point_light;
 }
 
 glm::mat4 vk::Object::TransformComponent::mat4()
