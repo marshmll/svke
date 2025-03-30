@@ -121,7 +121,7 @@ void vk::App::createDevice()
 
 void vk::App::createRenderer()
 {
-    renderer = std::make_unique<Renderer>(*device, *window, Swapchain::PresentMode::Mailbox);
+    renderer = std::make_unique<Renderer>(*device, *window, Swapchain::PresentMode::Immediate);
 }
 
 void vk::App::createGlobalPool()

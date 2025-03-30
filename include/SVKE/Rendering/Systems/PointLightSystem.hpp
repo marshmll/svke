@@ -1,6 +1,8 @@
 #pragma once
 
 #include "SVKE/Core/Graphics/Pipeline.hpp"
+#include "SVKE/Core/Math/Matrix.hpp"
+#include "SVKE/Core/Math/Vector.hpp"
 #include "SVKE/Core/System/Device.hpp"
 #include "SVKE/Core/System/Memory/Alignment.hpp"
 #include "SVKE/Rendering/Camera.hpp"
@@ -8,14 +10,6 @@
 #include "SVKE/Rendering/Resources/Object.hpp"
 #include "SVKE/Rendering/Systems/Renderer.hpp"
 #include "SVKE/Rendering/Descriptors/DescriptorSetLayout.hpp"
-
-#ifndef GLM_FORCE_RADIANS
-#define GLM_FORCE_RADIANS
-#endif
-#ifndef GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#endif
-#include <glm/glm.hpp>
 
 #include <array>
 
@@ -26,8 +20,8 @@ class PointLightSystem
   public:
     struct PointLightPushConstant
     {
-        ALIGNAS_VEC3 glm::vec3 position{};
-        ALIGNAS_VEC4 glm::vec4 color; // w = intensity
+        ALIGNAS_VEC3 Vec3f position{};
+        ALIGNAS_VEC4 Vec4f color; // w = intensity
         ALIGNAS_SCLR(float) float radius;
     };
 

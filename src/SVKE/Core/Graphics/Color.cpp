@@ -48,12 +48,12 @@ void vk::Color::setAlphaComponent(const uint8_t a)
     this->a = a;
 }
 
-const glm::vec3 vk::Color::toVec3() const
+const vk::Vec3f vk::Color::toVec3() const
 {
     return {static_cast<float>(r) / 255.f, static_cast<float>(g) / 255.f, static_cast<float>(b) / 255.f};
 }
 
-const glm::vec4 vk::Color::toVec4() const
+const vk::Vec4f vk::Color::toVec4() const
 {
     return {static_cast<float>(r) / 255.f, static_cast<float>(g) / 255.f, static_cast<float>(b) / 255.f,
             static_cast<float>(a) / 255.f};
@@ -61,7 +61,7 @@ const glm::vec4 vk::Color::toVec4() const
 
 VkClearColorValue vk::Color::toVkClearColorValue()
 {
-    glm::vec4 vec4 = toVec4();
+    Vec4f vec4 = toVec4();
 
     return {vec4.x, vec4.y, vec4.z, vec4.w};
 }

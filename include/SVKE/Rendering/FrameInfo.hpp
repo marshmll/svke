@@ -16,15 +16,15 @@ namespace vk
 {
 struct PointLight
 {
-    ALIGNAS_VEC3 glm::vec3 position{};
-    ALIGNAS_VEC4 glm::vec4 color{};    // w component is light intensity
+    ALIGNAS_VEC3 Vec3f position{};
+    ALIGNAS_VEC4 Vec4f color{}; // w component is light intensity
 };
 
 struct GlobalUBO
 {
-    ALIGNAS_MAT4 glm::mat4 projectionMatrix{1.f};
-    ALIGNAS_MAT4 glm::mat4 viewMatrix{1.f};
-    ALIGNAS_VEC4 glm::vec4 ambientLightColor{1.f, 1.f, 1.f, .01f}; // w = intensity
+    ALIGNAS_MAT4 Mat4f projectionMatrix{1.f};
+    ALIGNAS_MAT4 Mat4f viewMatrix{1.f};
+    ALIGNAS_VEC4 Vec4f ambientLightColor{1.f, 1.f, 1.f, .01f}; // w = intensity
     ALIGNAS_NESTED_UNIFORM PointLight pointLights[MAX_LIGHTS];
     ALIGNAS_SCLR(int) int numLights;
 };

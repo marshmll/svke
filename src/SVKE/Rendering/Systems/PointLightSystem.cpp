@@ -15,7 +15,7 @@ vk::PointLightSystem::~PointLightSystem()
 
 void vk::PointLightSystem::update(const FrameInfo &frame_info, GlobalUBO &ubo)
 {
-    auto rotate_light = glm::rotate(glm::mat4{1.f}, frame_info.dt, {0.f, -1.f, 0.f});
+    auto rotate_light = Matrix::rotate(Matrix::identityMat4f(), frame_info.dt, {0.f, -1.f, 0.f});
 
     int light_index = 0;
 
@@ -24,13 +24,15 @@ void vk::PointLightSystem::update(const FrameInfo &frame_info, GlobalUBO &ubo)
         if (!object.getPointLightComponent())
             continue;
 
+        assert(light_index < MAX_LIGHTS && "POINT LIGHTS EXCEEDED MAXIMUM SPECIFIED");
+
         // Update
-        object.setTranslation(glm::vec3{rotate_light * glm::vec4{object.getTranslation(), 1.0}});
+        object.setTranslation(Vec3f{rotate_light * Vec4f{object.getTranslation(), 1.0}});
 
         // Copy data to UBO
         ubo.pointLights[light_index].position = object.getTranslation();
         ubo.pointLights[light_index].color =
-            glm::vec4{object.getColor().toVec3(), object.getPointLightComponent()->lightIntensity};
+            Vec4f{object.getColor().toVec3(), object.getPointLightComponent()->lightIntensity};
 
         ++light_index;
     }
@@ -52,7 +54,7 @@ void vk::PointLightSystem::render(const FrameInfo &frame_info)
 
         PointLightPushConstant push = {};
         push.position = object.getTranslation();
-        push.color = glm::vec4{object.getColor().toVec3(), object.getPointLightComponent()->lightIntensity};
+        push.color = Vec4f{object.getColor().toVec3(), object.getPointLightComponent()->lightIntensity};
         push.radius = object.getScale().x;
 
         vkCmdPushConstants(frame_info.commandBuffer, pipelineLayout,

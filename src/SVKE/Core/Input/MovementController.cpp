@@ -7,7 +7,7 @@ vk::MovementController::MovementController(Keyboard &keyboard, Mouse &mouse)
 
 void vk::MovementController::moveInPlaneXZ(const float dt, Object &object)
 {
-    glm::vec3 rotate{0};
+    Vec3f rotate{0.f};
     auto mouse_data = mouse.getCursorData();
 
     if (mouse.isRawModeEnabled())
@@ -24,7 +24,7 @@ void vk::MovementController::moveInPlaneXZ(const float dt, Object &object)
     }
 
     // Apply rotation
-    if (glm::dot(rotate, rotate) > std::numeric_limits<float>::epsilon())
+    if (Vector::dot(rotate, rotate) > std::numeric_limits<float>::epsilon())
         object.setRotation(object.getRotation() + rotate);
 
     // Clamp pitch and wrap yaw
@@ -35,11 +35,11 @@ void vk::MovementController::moveInPlaneXZ(const float dt, Object &object)
 
     // Movement (unchanged, still uses dt)
     float yaw = object.getRotation().y;
-    const glm::vec3 forwardDir{sin(yaw), 0.f, cos(yaw)};
-    const glm::vec3 rightDir{forwardDir.z, 0.f, -forwardDir.x};
-    const glm::vec3 upDir{0.f, -1.f, 0.f};
+    const Vec3f forwardDir{sin(yaw), 0.f, cos(yaw)};
+    const Vec3f rightDir{forwardDir.z, 0.f, -forwardDir.x};
+    const Vec3f upDir{0.f, -1.f, 0.f};
 
-    glm::vec3 moveDir{0.f};
+    Vec3f moveDir{0.f};
     if (keyboard.isKeyPressed(keyMappings.moveForward))
         moveDir += forwardDir;
     if (keyboard.isKeyPressed(keyMappings.moveBackward))
@@ -53,6 +53,6 @@ void vk::MovementController::moveInPlaneXZ(const float dt, Object &object)
     if (keyboard.isKeyPressed(keyMappings.moveDown))
         moveDir -= upDir;
 
-    if (glm::dot(moveDir, moveDir) > std::numeric_limits<float>::epsilon())
-        object.setTranslation(object.getTranslation() + speed * dt * glm::normalize(moveDir));
+    if (Vector::dot(moveDir, moveDir) > std::numeric_limits<float>::epsilon())
+        object.setTranslation(object.getTranslation() + speed * dt * Vector::normalize(moveDir));
 }

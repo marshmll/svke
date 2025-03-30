@@ -1,12 +1,7 @@
 #pragma once
 
-#ifndef GLM_FORCE_RADIANS
-#define GLM_FORCE_RADIANS
-#endif
-#ifndef GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#endif
-#include <glm/glm.hpp>
+#include "SVKE/Core/Math/Vector.hpp"
+#include "SVKE/Core/Math/Matrix.hpp"
 
 #include <cassert>
 #include <limits>
@@ -23,19 +18,18 @@ class Camera
 
     void setPerspectiveProjection(const float fovy, const float aspect_ratio, const float near, const float far);
 
-    void setViewDirection(const glm::vec3 &position, const glm::vec3 &direction,
-                          const glm::vec3 &up = {0.f, -1.f, 0.f});
+    void setViewDirection(const Vec3f &position, const Vec3f &direction, const Vec3f &up = {0.f, -1.f, 0.f});
 
-    void setViewTarget(const glm::vec3 &position, const glm::vec3 &target, const glm::vec3 &up = {0.f, -1.f, 0.f});
+    void setViewTarget(const Vec3f &position, const Vec3f &target, const Vec3f &up = {0.f, -1.f, 0.f});
 
-    void setViewYXZ(const glm::vec3 &position, const glm::vec3 &rotation);
+    void setViewYXZ(const Vec3f &position, const Vec3f &rotation);
 
-    const glm::mat4 &getProjectionMatrix() const;
+    const Mat4f &getProjectionMatrix() const;
 
-    const glm::mat4 &getViewMatrix() const;
+    const Mat4f &getViewMatrix() const;
 
   private:
-    glm::mat4 projectionMatrix;
-    glm::mat4 viewMatrix;
+    Mat4f projectionMatrix;
+    Mat4f viewMatrix;
 };
 } // namespace vk

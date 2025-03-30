@@ -1,17 +1,11 @@
 #pragma once
 
-#ifndef GLM_FORCE_RADIANS
-#define GLM_FORCE_RADIANS
-#endif
-#ifndef GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#endif
-#include <glm/glm.hpp>
-
 #ifndef GLFW_INCLUDE_VULKAN
 #define GLFW_INCLUDE_VULKAN
 #endif
 #include <GLFW/glfw3.h>
+
+#include "SVKE/Core/Math/Vector.hpp"
 
 #include <cstdint>
 
@@ -55,9 +49,9 @@ class Color
 
     void setAlphaComponent(const uint8_t a);
 
-    const glm::vec3 toVec3() const;
+    const Vec3f toVec3() const;
 
-    const glm::vec4 toVec4() const;
+    const Vec4f toVec4() const;
 
     VkClearColorValue toVkClearColorValue();
 
