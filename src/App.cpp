@@ -11,6 +11,23 @@ vk::App::App()
 
 void vk::App::run()
 {
+    Texture texture;
+
+    if (!texture.loadFromFile("assets/textures/skull.jpg"))
+        std::cerr << "Failed to load texture";
+
+    std::cout << "LOADED TEXTURE assets/textures/texture.jpg WITH " << texture.getSize() << " bytes" << std::endl;
+
+    TextureImage image(*device, texture, TextureImage::Format::RGBA, TextureImage::Tiling::Optimal,
+                       VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+
+    TextureSampler::Config sampler_config{};
+    TextureSampler::defaultTextureSamplerConfig(sampler_config);
+    sampler_config.anisotropyEnable = VK_TRUE;
+    sampler_config.maxAnisotropy = device->getProperties().limits.maxSamplerAnisotropy;
+
+    TextureSampler sampler(*device, sampler_config);
+
     std::array<std::unique_ptr<Buffer>, Swapchain::MAX_FRAMES_IN_FLIGHT> global_ubo_buffers;
 
     for (auto &buffer : global_ubo_buffers)
@@ -25,6 +42,7 @@ void vk::App::run()
 
     auto global_set_layout = DescriptorSetLayout::Builder(*device)
                                  .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
+                                 .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
                                  .build();
 
     std::vector<VkDescriptorSet> global_descriptor_sets(Swapchain::MAX_FRAMES_IN_FLIGHT);
@@ -32,7 +50,12 @@ void vk::App::run()
     for (int i = 0; i < global_descriptor_sets.size(); ++i)
     {
         auto buffer_info = global_ubo_buffers[i]->getDescriptorInfo();
-        DescriptorWriter(*global_set_layout, *globalPool).writeBuffer(0, buffer_info).build(global_descriptor_sets[i]);
+        auto image_info = image.getDescriptorInfo(sampler);
+
+        DescriptorWriter(*global_set_layout, *globalPool)
+            .writeBuffer(0, buffer_info)
+            .writeImage(1, image_info)
+            .build(global_descriptor_sets[i]);
     }
 
     Camera camera;
@@ -131,55 +154,23 @@ void vk::App::createGlobalPool()
     globalPool = DescriptorPool::Builder(*device)
                      .setMaxSets(Swapchain::MAX_FRAMES_IN_FLIGHT)
                      .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Swapchain::MAX_FRAMES_IN_FLIGHT)
+                     .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, Swapchain::MAX_FRAMES_IN_FLIGHT)
                      .build();
 }
 
 void vk::App::loadObjects()
 {
     {
-        std::shared_ptr<Model> quad_model = std::make_shared<Model>(*device);
-        if (!quad_model->loadFromFile("assets/models/quad.obj"))
-            throw std::runtime_error("vl::App::loadObjects: Failed to load Quad model");
+        std::shared_ptr<Model> skull_model = std::make_shared<Model>(*device);
+        if (!skull_model->loadFromFile("assets/models/skull.obj"))
+            throw std::runtime_error("vl::App::loadObjects: Failed to load Skull model");
 
-        Object floor;
-        floor.setModel(quad_model);
-        floor.setTranslation({0.f, 0.5f, 0.f});
-        floor.setScale({8.f, 1.f, 8.f});
-        objects[floor.getId()] = std::move(floor);
-    }
-    {
-        std::shared_ptr<Model> flat_vase_model = std::make_shared<Model>(*device);
-        if (!flat_vase_model->loadFromFile("assets/models/flat_vase.obj"))
-            throw std::runtime_error("vl::App::loadObjects: Failed to load Flat Vase model");
-
-        Object flat_vase;
-        flat_vase.setModel(flat_vase_model);
-        flat_vase.setTranslation({0.5f, 0.5f, 0.f});
-        flat_vase.setScale({3.f, 3.f, 3.f});
-        objects[flat_vase.getId()] = std::move(flat_vase);
-    }
-    {
-        std::shared_ptr<Model> smooth_vase_model = std::make_shared<Model>(*device);
-        if (!smooth_vase_model->loadFromFile("assets/models/smooth_vase.obj"))
-            throw std::runtime_error("vl::App::loadObjects: Failed to load Smooth Vase model");
-
-        Object smooth_vase;
-        smooth_vase.setModel(smooth_vase_model);
-        smooth_vase.setTranslation({-0.5f, 0.5f, 0.f});
-        smooth_vase.setScale({3.f, 3.f, 3.f});
-        objects[smooth_vase.getId()] = std::move(smooth_vase);
-    }
-    {
-        std::shared_ptr<Model> generator_model = std::make_shared<Model>(*device);
-        if (!generator_model->loadFromFile("assets/models/emergency_backup_generator.obj"))
-            throw std::runtime_error("vl::App::loadObjects: Failed to load Emergency Backup Generator model");
-
-        Object generator;
-        generator.setModel(generator_model);
-        generator.setTranslation({0.f, -0.5f, 3.f});
-        generator.setScale({0.5f, 0.5f, 0.5f});
-        generator.setRotation({0.f, Angle::Rad90, 0.f});
-        objects[generator.getId()] = std::move(generator);
+        Object skull;
+        skull.setModel(skull_model);
+        skull.setTranslation({0.f, 0.f, 0.f});
+        skull.setScale({.05f, .05f, .05f});
+        skull.setRotation({Angle::Rad90, 0.f, 0.f});
+        objects[skull.getId()] = std::move(skull);
     }
 
     std::vector<Color> light_colors{COLOR_RED,  COLOR_ORANGE, COLOR_YELLOW, COLOR_GREEN,
@@ -187,14 +178,14 @@ void vk::App::loadObjects()
 
     for (int i = 0; i < light_colors.size(); i++)
     {
-        Object point_light = Object::makePointLight(0.4f);
+        Object point_light = Object::makePointLight(.8f);
 
         point_light.setColor(light_colors[i]);
 
         auto rotate_light =
             Matrix::rotate(Matrix::identityMat4f(), (i * Angle::Rad360) / light_colors.size(), {0.f, -1.f, 0.f});
 
-        point_light.setTranslation(Vec3f(rotate_light * Vec4f(-1.5f, -1.5f, -1.5f, 1.f)));
+        point_light.setTranslation(Vec3f(rotate_light * Vec4f(-1.5f, -1.f, -1.5f, 1.f)));
         objects[point_light.getId()] = std::move(point_light);
     }
 }

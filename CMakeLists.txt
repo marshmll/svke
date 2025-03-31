@@ -12,11 +12,12 @@ target_include_directories(svke PRIVATE
     externals/glm
     externals/VulkanMemoryAllocator
     externals/tinyobjloader
+    externals/stb
 )
 
 target_compile_features(svke PRIVATE cxx_std_17 c_std_99)
 
-target_link_libraries(svke PRIVATE vulkan glfw glm shaderc)
+target_link_libraries(svke PRIVATE vulkan glfw glm)
 
 add_custom_target(assets
     COMMAND ${CMAKE_SOURCE_DIR}/compile.sh ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}

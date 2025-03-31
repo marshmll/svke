@@ -27,7 +27,7 @@ void vk::PointLightSystem::update(const FrameInfo &frame_info, GlobalUBO &ubo)
         assert(light_index < MAX_LIGHTS && "POINT LIGHTS EXCEEDED MAXIMUM SPECIFIED");
 
         // Update
-        // object.setTranslation(Vec3f{rotate_light * Vec4f{object.getTranslation(), 1.0}});
+        object.setTranslation(Vec3f{rotate_light * Vec4f{object.getTranslation(), 1.0}});
 
         // Copy data to UBO
         ubo.pointLights[light_index].position = object.getTranslation();

@@ -155,19 +155,19 @@ VkCommandBuffer vk::Device::beginSingleTimeCommands()
     return command_buffer;
 }
 
-void vk::Device::endSingleTimeCommands(VkCommandBuffer commandBuffer)
+void vk::Device::endSingleTimeCommands(VkCommandBuffer command_buffer)
 {
-    vkEndCommandBuffer(commandBuffer);
+    vkEndCommandBuffer(command_buffer);
 
     VkSubmitInfo submit_info{};
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submit_info.commandBufferCount = 1;
-    submit_info.pCommandBuffers = &commandBuffer;
+    submit_info.pCommandBuffers = &command_buffer;
 
     vkQueueSubmit(graphicsQueue, 1, &submit_info, VK_NULL_HANDLE);
     vkQueueWaitIdle(graphicsQueue);
 
-    vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+    vkFreeCommandBuffers(device, commandPool, 1, &command_buffer);
 }
 
 void vk::Device::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size)

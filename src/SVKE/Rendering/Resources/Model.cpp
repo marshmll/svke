@@ -69,7 +69,8 @@ const bool vk::Model::loadFromFile(const std::string &path)
 
             if (index.texcoord_index >= 0)
             {
-                v.uv = {attrib.texcoords[2 * index.texcoord_index + 0], attrib.texcoords[2 * index.texcoord_index + 1]};
+                v.uv = {attrib.texcoords[2 * index.texcoord_index + 0],
+                        1.0f - attrib.texcoords[2 * index.texcoord_index + 1]};
             }
 
             if (unique_vertices.find(v) == unique_vertices.end())
@@ -209,8 +210,8 @@ void vk::Model::createIndexBuffers(const IndexArray &indices)
     staging_buffer.unmap();
 
     indexBuffer = std::make_unique<Buffer>(device, buffer_size,
-                                            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-                                            VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
+                                           VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                                           VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
 
     staging_buffer.copyTo(*indexBuffer, buffer_size);
 }

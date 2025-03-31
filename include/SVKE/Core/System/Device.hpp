@@ -76,7 +76,7 @@ class Device
 
     VkCommandBuffer beginSingleTimeCommands();
 
-    void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+    void endSingleTimeCommands(VkCommandBuffer command_buffer);
 
     void copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size);
 
