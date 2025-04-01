@@ -22,6 +22,8 @@ class App
     std::unique_ptr<Device> device;
     std::unique_ptr<Renderer> renderer;
     std::unique_ptr<DescriptorPool> globalPool;
+    std::unique_ptr<DescriptorPool> objectTexturePool;
+    std::unique_ptr<TextureSampler> textureSampler;
     Object::Map objects;
 
     void createWindow();
@@ -31,6 +33,10 @@ class App
     void createRenderer();
 
     void createGlobalPool();
+
+    void createObjectTexturePool();
+
+    void createTextureSampler();
 
     void loadObjects();
 };

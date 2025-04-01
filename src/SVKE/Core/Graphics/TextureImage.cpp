@@ -17,7 +17,7 @@ vk::TextureImage::~TextureImage()
     vmaDestroyImage(device.getAllocator(), image, allocation);
 }
 
-VkDescriptorImageInfo vk::TextureImage::getDescriptorInfo(TextureSampler &sampler) const
+const VkDescriptorImageInfo vk::TextureImage::getDescriptorInfo(TextureSampler &sampler) const
 {
     VkDescriptorImageInfo image_info{};
     image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;

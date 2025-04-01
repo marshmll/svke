@@ -31,7 +31,9 @@ layout(set = 0, binding = 0) uniform GlobalUbo
 }
 ubo;
 
-layout(binding = 1) uniform sampler2D texSampler;
+layout(set = 1, binding = 0) uniform sampler2D texSampler;
+
+const float BLINN_TERM_FACTOR = 256.0; // higher values produce sharper specular highlights
 
 void main()
 {
@@ -61,7 +63,7 @@ void main()
         vec3 halfAngle = normalize(directionToLight + viewDirection);
         float blinnTerm = dot(surfaceNormal, halfAngle);
         blinnTerm = clamp(blinnTerm, 0.0, 1.0);
-        blinnTerm = pow(blinnTerm, 512.0); // higher values produce sharper specular highlights
+        blinnTerm = pow(blinnTerm, BLINN_TERM_FACTOR);
         specularLight += intensity * blinnTerm;
     }
 

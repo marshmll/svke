@@ -6,30 +6,14 @@ vk::App::App()
     createDevice();
     createRenderer();
     createGlobalPool();
+    createObjectTexturePool();
+    createTextureSampler();
     loadObjects();
 }
 
 void vk::App::run()
 {
-    Texture texture;
-
-    if (!texture.loadFromFile("assets/textures/skull.jpg"))
-        std::cerr << "Failed to load texture";
-
-    std::cout << "LOADED TEXTURE assets/textures/texture.jpg WITH " << texture.getSize() << " bytes" << std::endl;
-
-    TextureImage image(*device, texture, TextureImage::Format::RGBA, TextureImage::Tiling::Optimal,
-                       VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
-
-    TextureSampler::Config sampler_config{};
-    TextureSampler::defaultTextureSamplerConfig(sampler_config);
-    sampler_config.anisotropyEnable = VK_TRUE;
-    sampler_config.maxAnisotropy = device->getProperties().limits.maxSamplerAnisotropy;
-
-    TextureSampler sampler(*device, sampler_config);
-
     std::array<std::unique_ptr<Buffer>, Swapchain::MAX_FRAMES_IN_FLIGHT> global_ubo_buffers;
-
     for (auto &buffer : global_ubo_buffers)
     {
         buffer = std::make_unique<Buffer>(*device, sizeof(GlobalUBO),
@@ -40,22 +24,36 @@ void vk::App::run()
         buffer->map();
     }
 
+    // Global Descriptor Set Layout
     auto global_set_layout = DescriptorSetLayout::Builder(*device)
                                  .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
-                                 .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
                                  .build();
 
-    std::vector<VkDescriptorSet> global_descriptor_sets(Swapchain::MAX_FRAMES_IN_FLIGHT);
+    // Object Descriptor Set Layout
+    auto object_set_layout = DescriptorSetLayout::Builder(*device)
+                                 .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+                                 .build();
 
+    std::vector<VkDescriptorSetLayout> set_layouts = {global_set_layout->getDescriptorSetLayout(),
+                                                      object_set_layout->getDescriptorSetLayout()};
+
+    std::vector<VkDescriptorSet> global_descriptor_sets(Swapchain::MAX_FRAMES_IN_FLIGHT);
     for (int i = 0; i < global_descriptor_sets.size(); ++i)
     {
         auto buffer_info = global_ubo_buffers[i]->getDescriptorInfo();
-        auto image_info = image.getDescriptorInfo(sampler);
+        DescriptorWriter(*global_set_layout, *globalPool).writeBuffer(0, buffer_info).build(global_descriptor_sets[i]);
+    }
 
-        DescriptorWriter(*global_set_layout, *globalPool)
-            .writeBuffer(0, buffer_info)
-            .writeImage(1, image_info)
-            .build(global_descriptor_sets[i]);
+    std::unordered_map<Object::objid_t, VkDescriptorSet> object_descriptor_sets;
+    for (auto &[id, object] : objects)
+    {
+        if (!object.getTextureImage())
+            continue;
+
+        auto image_info = object.getTextureImage()->getDescriptorInfo(*textureSampler);
+        DescriptorWriter(*object_set_layout, *objectTexturePool)
+            .writeImage(0, image_info)
+            .build(object_descriptor_sets[id]);
     }
 
     Camera camera;
@@ -66,7 +64,7 @@ void vk::App::run()
     Mouse mouse(*window);
     MovementController camera_controller(keyboard, mouse);
 
-    RenderSystem render_system(*device, *renderer, *global_set_layout);
+    RenderSystem render_system(*device, *renderer, set_layouts);
     PointLightSystem point_light_system(*device, *renderer, *global_set_layout);
 
     Timer delta_timer;
@@ -92,7 +90,7 @@ void vk::App::run()
             mouse.setCursorMode(Mouse::CursorMode::Disabled);
 
         const float aspect_ratio = renderer->getAspectRatio();
-        camera.setPerspectiveProjection(Angle::toRadians(50.f), aspect_ratio, .001f, 1000.f);
+        camera.setPerspectiveProjection(Angle::Rad45, aspect_ratio, .01f, 1000.f);
 
         const float dt = glm::min(delta_timer.getElapsedTimeAsSeconds(), 0.25f);
         delta_timer.restart();
@@ -106,7 +104,8 @@ void vk::App::run()
             auto current_frame_index = renderer->getCurrentFrameIndex();
 
             FrameInfo frame_info{
-                current_frame_index, dt, command_buffer, camera, global_descriptor_sets[current_frame_index], objects};
+                current_frame_index,    dt,     command_buffer, camera, global_descriptor_sets[current_frame_index],
+                object_descriptor_sets, objects};
 
             // Update
             GlobalUBO ubo = {};
@@ -146,7 +145,7 @@ void vk::App::createDevice()
 
 void vk::App::createRenderer()
 {
-    renderer = std::make_unique<Renderer>(*device, *window, Swapchain::PresentMode::Immediate);
+    renderer = std::make_unique<Renderer>(*device, *window, Swapchain::PresentMode::Mailbox);
 }
 
 void vk::App::createGlobalPool()
@@ -154,8 +153,25 @@ void vk::App::createGlobalPool()
     globalPool = DescriptorPool::Builder(*device)
                      .setMaxSets(Swapchain::MAX_FRAMES_IN_FLIGHT)
                      .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Swapchain::MAX_FRAMES_IN_FLIGHT)
-                     .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, Swapchain::MAX_FRAMES_IN_FLIGHT)
                      .build();
+}
+
+void vk::App::createObjectTexturePool()
+{
+    objectTexturePool = DescriptorPool::Builder(*device)
+                            .setMaxSets(Swapchain::MAX_FRAMES_IN_FLIGHT)
+                            .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, sizeof(Object::objid_t))
+                            .build();
+}
+
+void vk::App::createTextureSampler()
+{
+    TextureSampler::Config sampler_config{};
+    TextureSampler::defaultTextureSamplerConfig(sampler_config);
+    sampler_config.anisotropyEnable = VK_TRUE;
+    sampler_config.maxAnisotropy = device->getProperties().limits.maxSamplerAnisotropy;
+
+    textureSampler = std::make_unique<TextureSampler>(*device, sampler_config);
 }
 
 void vk::App::loadObjects()
@@ -165,12 +181,42 @@ void vk::App::loadObjects()
         if (!skull_model->loadFromFile("assets/models/skull.obj"))
             throw std::runtime_error("vl::App::loadObjects: Failed to load Skull model");
 
+        Texture skull_texture;
+        if (!skull_texture.loadFromFile("assets/textures/skull.jpg"))
+            std::cerr << "Failed to load skull_texture" << std::endl;
+
+        std::shared_ptr<TextureImage> skull_texture_image = std::make_shared<TextureImage>(
+            *device, skull_texture, TextureImage::Format::RGBA, TextureImage::Tiling::Optimal,
+            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+
         Object skull;
         skull.setModel(skull_model);
-        skull.setTranslation({0.f, 0.f, 0.f});
+        skull.setTextureImage(skull_texture_image);
+        skull.setTranslation({0.f, 1.f, 0.f});
         skull.setScale({.05f, .05f, .05f});
         skull.setRotation({Angle::Rad90, 0.f, 0.f});
         objects[skull.getId()] = std::move(skull);
+    }
+
+    {
+        std::shared_ptr<Model> cube_model = std::make_shared<Model>(*device);
+        if (!cube_model->loadFromFile("assets/models/cube_tex.obj"))
+            throw std::runtime_error("vl::App::loadObjects: Failed to load Cube model");
+
+        Texture cube_texture;
+        if (!cube_texture.loadFromFile("assets/textures/cube.png"))
+            std::cerr << "Failed to load cube_texture" << std::endl;
+
+        std::shared_ptr<TextureImage> cube_texture_image = std::make_shared<TextureImage>(
+            *device, cube_texture, TextureImage::Format::RGBA, TextureImage::Tiling::Optimal,
+            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+
+        Object cube;
+        cube.setModel(cube_model);
+        cube.setTextureImage(cube_texture_image);
+        cube.setTranslation({1.f, 0.f, 0.f});
+        cube.setScale({1.f, 1.f, 1.f});
+        objects[cube.getId()] = std::move(cube);
     }
 
     std::vector<Color> light_colors{COLOR_RED,  COLOR_ORANGE, COLOR_YELLOW, COLOR_GREEN,

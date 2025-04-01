@@ -2,6 +2,7 @@
 
 #include "SVKE/Rendering/Resources/Model.hpp"
 #include "SVKE/Core/Graphics/Color.hpp"
+#include "SVKE/Core/Graphics/TextureImage.hpp"
 #include "SVKE/Core/Math/Vector.hpp"
 #include "SVKE/Core/Math/Matrix.hpp"
 
@@ -54,6 +55,8 @@ class Object
 
     const std::shared_ptr<Model> &getModel() const;
 
+    const std::shared_ptr<TextureImage> &getTextureImage() const;
+
     const TransformComponent &getTransformComponent() const;
 
     const std::optional<PointLightComponent> &getPointLightComponent() const;
@@ -65,6 +68,8 @@ class Object
     const Vec3f &getRotation() const;
 
     void setModel(std::shared_ptr<Model> &model);
+
+    void setTextureImage(std::shared_ptr<TextureImage> &tex_image);
 
     void setColor(const Color &color);
 
@@ -86,6 +91,7 @@ class Object
 
     // Optional
     std::shared_ptr<Model> model;
+    std::shared_ptr<TextureImage> textureImage;
     std::optional<PointLightComponent> pointLightComponent;
 };
 } // namespace vk

@@ -37,6 +37,7 @@ struct FrameInfo
     VkCommandBuffer &commandBuffer;
     Camera &camera;
     VkDescriptorSet &globalDescriptorSet;
+    std::unordered_map<Object::objid_t, VkDescriptorSet> &objectDescriptorSets;
     Object::Map &objects;
 };
 } // namespace vk

@@ -10,15 +10,15 @@ vk::TextureSampler::~TextureSampler()
     vkDestroySampler(device.getLogicalDevice(), sampler, nullptr);
 }
 
-VkSampler &vk::TextureSampler::getSampler()
+const VkSampler &vk::TextureSampler::getSampler() const
 {
     return sampler;
 }
 
 void vk::TextureSampler::defaultTextureSamplerConfig(Config &config)
 {
-    config.magnifyingFilter = VK_FILTER_LINEAR;
-    config.minifyingFilter = VK_FILTER_LINEAR;
+    config.magnificationFilter = VK_FILTER_LINEAR;
+    config.minificationFilter = VK_FILTER_LINEAR;
     config.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     config.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
     config.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
@@ -38,8 +38,8 @@ void vk::TextureSampler::createSampler(const Config &config)
 {
     VkSamplerCreateInfo sampler_info{};
     sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    sampler_info.magFilter = config.magnifyingFilter;
-    sampler_info.minFilter = config.minifyingFilter;
+    sampler_info.magFilter = config.magnificationFilter;
+    sampler_info.minFilter = config.minificationFilter;
     sampler_info.mipmapMode = config.mipmapMode;
     sampler_info.addressModeU = config.addressModeU;
     sampler_info.addressModeV = config.addressModeV;

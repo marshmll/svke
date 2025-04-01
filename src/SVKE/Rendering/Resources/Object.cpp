@@ -30,6 +30,11 @@ void vk::Object::draw(VkCommandBuffer &command_buffer)
     model->draw(command_buffer);
 }
 
+const std::shared_ptr<vk::TextureImage> &vk::Object::getTextureImage() const
+{
+    return textureImage;
+}
+
 vk::Mat4f vk::Object::transform()
 {
     return transformComponent.mat4();
@@ -83,6 +88,11 @@ const vk::Object::TransformComponent &vk::Object::getTransformComponent() const
 void vk::Object::setModel(std::shared_ptr<Model> &model)
 {
     this->model = model;
+}
+
+void vk::Object::setTextureImage(std::shared_ptr<TextureImage> &tex_image)
+{
+    textureImage = tex_image;
 }
 
 void vk::Object::setColor(const Color &color)

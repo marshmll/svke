@@ -31,6 +31,7 @@ class RenderSystem
 
   public:
     RenderSystem(Device &device, Renderer &renderer, DescriptorSetLayout &global_set_layout);
+    RenderSystem(Device &device, Renderer &renderer, std::vector<VkDescriptorSetLayout> &set_layouts);
     RenderSystem(const RenderSystem &) = delete;
     RenderSystem &operator=(const RenderSystem &) = delete;
 
@@ -50,6 +51,8 @@ class RenderSystem
     void loadShaders();
 
     void createPipelineLayout(DescriptorSetLayout &global_set_layout);
+
+    void createPipelineLayout(std::vector<VkDescriptorSetLayout> &set_layouts);
 
     void createPipeline(VkRenderPass render_pass);
 };

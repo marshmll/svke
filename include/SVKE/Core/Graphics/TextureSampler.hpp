@@ -9,8 +9,8 @@ class TextureSampler
   public:
     struct Config
     {
-        VkFilter magnifyingFilter;
-        VkFilter minifyingFilter;
+        VkFilter magnificationFilter;
+        VkFilter minificationFilter;
         VkSamplerMipmapMode mipmapMode;
         VkSamplerAddressMode addressModeU;
         VkSamplerAddressMode addressModeV;
@@ -32,7 +32,7 @@ class TextureSampler
 
     ~TextureSampler();
 
-    VkSampler &getSampler();
+    const VkSampler &getSampler() const;
 
     static void defaultTextureSamplerConfig(Config &config);
 

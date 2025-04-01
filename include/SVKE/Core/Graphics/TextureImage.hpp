@@ -29,7 +29,7 @@ class TextureImage
 
     ~TextureImage();
 
-    VkDescriptorImageInfo getDescriptorInfo(TextureSampler &sampler) const;
+    const VkDescriptorImageInfo getDescriptorInfo(TextureSampler &sampler) const;
 
   private:
     Device &device;
