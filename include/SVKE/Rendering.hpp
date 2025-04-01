@@ -10,3 +10,4 @@
 #include "SVKE/Rendering/Systems/PointLightSystem.hpp"
 #include "SVKE/Rendering/Systems/Renderer.hpp"
 #include "SVKE/Rendering/Systems/RenderSystem.hpp"
+#include "SVKE/Rendering/Systems/TextureRenderSystem.hpp"

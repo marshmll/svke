@@ -31,6 +31,8 @@ layout(set = 0, binding = 0) uniform GlobalUbo
 }
 ubo;
 
+layout(set = 1, binding = 0) uniform sampler2D texSampler;
+
 const float BLINN_TERM_FACTOR = 256.0; // higher values produce sharper specular highlights
 
 void main()
@@ -65,5 +67,5 @@ void main()
         specularLight += intensity * blinnTerm;
     }
 
-    outColor = vec4(diffuseLight * fragColor + specularLight * fragColor, 1.0);
+    outColor = vec4((diffuseLight * fragColor + specularLight * fragColor) * texture(texSampler, fragUv).rgb, 1.0);
 }

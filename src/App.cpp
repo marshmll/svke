@@ -64,7 +64,8 @@ void vk::App::run()
     Mouse mouse(*window);
     MovementController camera_controller(keyboard, mouse);
 
-    RenderSystem render_system(*device, *renderer, set_layouts);
+    RenderSystem render_system(*device, *renderer, *global_set_layout);
+    TextureRenderSystem texture_render_system(*device, *renderer, set_layouts);
     PointLightSystem point_light_system(*device, *renderer, *global_set_layout);
 
     Timer delta_timer;
@@ -122,6 +123,7 @@ void vk::App::run()
 
             // Order matters!
             render_system.render(frame_info);
+            texture_render_system.render(frame_info);
             point_light_system.render(frame_info);
 
             renderer->endRenderPass(command_buffer);
@@ -145,7 +147,7 @@ void vk::App::createDevice()
 
 void vk::App::createRenderer()
 {
-    renderer = std::make_unique<Renderer>(*device, *window, Swapchain::PresentMode::Mailbox);
+    renderer = std::make_unique<Renderer>(*device, *window, Swapchain::PresentMode::Immediate);
 }
 
 void vk::App::createGlobalPool()

@@ -17,6 +17,8 @@ class Object
     using objid_t = uint32_t;
     using Map = std::unordered_map<objid_t, Object>;
 
+    inline static constexpr uint32_t MAX_OBJ_ID = std::numeric_limits<uint32_t>::max();
+
     struct TransformComponent
     {
         Vec3f translation{};

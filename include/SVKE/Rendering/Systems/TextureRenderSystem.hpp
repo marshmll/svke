@@ -13,7 +13,7 @@
 
 namespace vk
 {
-class RenderSystem
+class TextureRenderSystem
 {
     struct PushConstantData
     {
@@ -22,11 +22,11 @@ class RenderSystem
     };
 
   public:
-    RenderSystem(Device &device, Renderer &renderer, DescriptorSetLayout &global_set_layout);
-    RenderSystem(const RenderSystem &) = delete;
-    RenderSystem &operator=(const RenderSystem &) = delete;
+    TextureRenderSystem(Device &device, Renderer &renderer, std::vector<VkDescriptorSetLayout> &set_layouts);
+    TextureRenderSystem(const TextureRenderSystem &) = delete;
+    TextureRenderSystem &operator=(const TextureRenderSystem &) = delete;
 
-    ~RenderSystem();
+    ~TextureRenderSystem();
 
     void render(const FrameInfo &frame_info);
 
@@ -41,7 +41,7 @@ class RenderSystem
 
     void loadShaders();
 
-    void createPipelineLayout(DescriptorSetLayout &global_set_layout);
+    void createPipelineLayout(std::vector<VkDescriptorSetLayout> &set_layouts);
 
     void createPipeline(VkRenderPass render_pass);
 };
