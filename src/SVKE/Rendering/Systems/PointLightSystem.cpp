@@ -117,6 +117,11 @@ void vk::PointLightSystem::createPipeline(VkRenderPass render_pass)
     pipeline_config.bindingDescriptions.clear();
     pipeline_config.renderPass = render_pass;
     pipeline_config.pipelineLayout = pipelineLayout;
+    pipeline_config.multisampleInfo.rasterizationSamples = device.getCurrentMsaaSamples();
+
+    // Optional: Shader antialiasing, smooths inner parts of shapes. Might cost some performance
+    pipeline_config.multisampleInfo.sampleShadingEnable = VK_TRUE;
+    pipeline_config.multisampleInfo.minSampleShading = .2f;
 
     pipeline = std::make_unique<Pipeline>(device, *vertShader, *fragShader, pipeline_config);
 }

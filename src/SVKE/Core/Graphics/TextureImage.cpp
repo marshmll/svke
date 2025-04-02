@@ -1,10 +1,8 @@
 #include "SVKE/Core/Graphics/TextureImage.hpp"
 
-vk::TextureImage::TextureImage(Device &device, Texture &texture, const Format &format, const Tiling &tiling,
-                               const VkImageUsageFlags usage)
-    : device(device), format(static_cast<VkFormat>(format))
+vk::TextureImage::TextureImage(Device &device, Texture &texture) : device(device), format(VK_FORMAT_R8G8B8A8_SRGB)
 {
-    createImage(texture, static_cast<VkImageTiling>(tiling), usage);
+    createImage(texture, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
     transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     copyTextureToImage(texture);
     transitionImageLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

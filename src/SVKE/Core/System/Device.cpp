@@ -1,12 +1,12 @@
 #include "SVKE/Core/System/Device.hpp"
 
-vk::Device::Device(Window &window) : window(window)
+vk::Device::Device(Window &window, const MSAA &preferred_msaa_samples) : window(window)
 {
     nullifyHandles();
     createInstance();
     setupDebugMessenger();
     createSurface();
-    pickAdequatePhysicalDevice();
+    pickAdequatePhysicalDevice(preferred_msaa_samples);
     createLogicalDevice();
     createVmaAllocator();
     createCommandPool();
@@ -61,25 +61,45 @@ VkQueue vk::Device::getPresentQueue()
     return presentQueue;
 }
 
+const VkSampleCountFlagBits &vk::Device::getMsaaMaxSamples() const
+{
+    return msaaMaxSamples;
+}
+
+const VkSampleCountFlagBits &vk::Device::getCurrentMsaaSamples() const
+{
+    return currentMsaaSamples;
+}
+
+VkSampleCountFlagBits vk::Device::getMsaaSamplesOrClosest(const MSAA &samples) const
+{
+    VkSampleCountFlags counts =
+        properties.limits.framebufferColorSampleCounts & properties.limits.framebufferDepthSampleCounts;
+
+    if ((counts & VK_SAMPLE_COUNT_64_BIT) > 0 && samples >= MSAA::x64)
+        return VK_SAMPLE_COUNT_64_BIT;
+
+    else if ((counts & VK_SAMPLE_COUNT_32_BIT) > 0 && samples >= MSAA::x32)
+        return VK_SAMPLE_COUNT_32_BIT;
+
+    else if ((counts & VK_SAMPLE_COUNT_16_BIT) > 0 && samples >= MSAA::x16)
+        return VK_SAMPLE_COUNT_16_BIT;
+
+    else if ((counts & VK_SAMPLE_COUNT_8_BIT) > 0 && samples >= MSAA::x8)
+        return VK_SAMPLE_COUNT_8_BIT;
+
+    else if ((counts & VK_SAMPLE_COUNT_4_BIT) > 0 && samples >= MSAA::x4)
+        return VK_SAMPLE_COUNT_4_BIT;
+
+    else if ((counts & VK_SAMPLE_COUNT_2_BIT) > 0 && samples >= MSAA::x2)
+        return VK_SAMPLE_COUNT_2_BIT;
+
+    return VK_SAMPLE_COUNT_1_BIT;
+}
+
 vk::Device::SwapchainSupportDetails vk::Device::getSwapchainSupport()
 {
     return querySwapchainSupport(physicalDevice);
-}
-
-const uint32_t vk::Device::findMemoryType(const uint32_t typeFilter, VkMemoryPropertyFlags properties)
-{
-    VkPhysicalDeviceMemoryProperties mem_properties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &mem_properties);
-
-    for (uint32_t i = 0; i < mem_properties.memoryTypeCount; i++)
-    {
-        if ((typeFilter & (1 << i)) && (mem_properties.memoryTypes[i].propertyFlags & properties) == properties)
-        {
-            return i;
-        }
-    }
-
-    throw std::runtime_error("vk::Device::findMemoryType: FAILED TO FIND MEMORY TYPE");
 }
 
 vk::Device::QueueFamilyIndices vk::Device::findPhysicalQueueFamilies()
@@ -103,37 +123,6 @@ VkFormat vk::Device::findSupportedFormat(const std::vector<VkFormat> &candidates
     }
 
     throw std::runtime_error("vk::Device::findSupportedFormat: FAILED TO FIND SUPPORTED FORMAT");
-}
-
-void vk::Device::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memory_usage,
-                              VkBuffer &buffer, VmaAllocation &allocation)
-{
-    VkBufferCreateInfo buffer_info = {};
-    buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    buffer_info.size = size;
-    buffer_info.usage = usage;
-
-    VmaAllocationCreateInfo alloc_info = {};
-    alloc_info.usage = memory_usage;
-
-    if (vmaCreateBuffer(allocator, &buffer_info, &alloc_info, &buffer, &allocation, nullptr) != VK_SUCCESS)
-        throw std::runtime_error("vk::Device::createBuffer: FAILED TO CREATE BUFFER");
-}
-
-void vk::Device::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memory_usage,
-                              VkBuffer &buffer, VmaAllocation &allocation, VmaAllocationCreateFlags flags)
-{
-    VkBufferCreateInfo buffer_info = {};
-    buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    buffer_info.size = size;
-    buffer_info.usage = usage;
-
-    VmaAllocationCreateInfo alloc_info = {};
-    alloc_info.usage = memory_usage;
-    alloc_info.flags = flags;
-
-    if (vmaCreateBuffer(allocator, &buffer_info, &alloc_info, &buffer, &allocation, nullptr) != VK_SUCCESS)
-        throw std::runtime_error("vk::Device::createBuffer: FAILED TO CREATE BUFFER");
 }
 
 VkCommandBuffer vk::Device::beginSingleTimeCommands()
@@ -170,41 +159,6 @@ void vk::Device::endSingleTimeCommands(VkCommandBuffer command_buffer)
     vkFreeCommandBuffers(device, commandPool, 1, &command_buffer);
 }
 
-void vk::Device::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size)
-{
-    VkCommandBuffer command_buffer = beginSingleTimeCommands();
-
-    VkBufferCopy copy_region = {};
-    copy_region.srcOffset = 0;
-    copy_region.dstOffset = 0;
-    copy_region.size = size;
-    vkCmdCopyBuffer(command_buffer, src_buffer, dst_buffer, 1, &copy_region);
-
-    endSingleTimeCommands(command_buffer);
-}
-
-void vk::Device::copyBufferToImage(VkBuffer &buffer, VkImage &image, const uint32_t width, const uint32_t height,
-                                   const uint32_t layer_count)
-{
-    VkCommandBuffer command_buffer = beginSingleTimeCommands();
-
-    VkBufferImageCopy region{};
-    region.bufferOffset = 0;
-    region.bufferRowLength = 0;
-    region.bufferImageHeight = 0;
-
-    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    region.imageSubresource.mipLevel = 0;
-    region.imageSubresource.baseArrayLayer = 0;
-    region.imageSubresource.layerCount = layer_count;
-
-    region.imageOffset = {0, 0, 0};
-    region.imageExtent = {width, height, 1};
-
-    vkCmdCopyBufferToImage(command_buffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-    endSingleTimeCommands(command_buffer);
-}
-
 void vk::Device::createImageWithInfo(const VkImageCreateInfo &image_info, VkMemoryPropertyFlags properties,
                                      VkImage &image, VmaAllocation &image_memory)
 {
@@ -224,6 +178,29 @@ void vk::Device::createImageWithInfo(const VkImageCreateInfo &image_info, VkMemo
 
     if (result != VK_SUCCESS)
         throw std::runtime_error("vk::Device::createImageWithInfo: FAILED TO CREATE IMAGE WITH VMA");
+}
+
+const std::string vk::Device::getMsaaSamplesAsString(const MSAA &samples)
+{
+    switch (samples)
+    {
+    case MSAA::x1:
+        return "1x";
+    case MSAA::x2:
+        return "2x";
+    case MSAA::x4:
+        return "4x";
+    case MSAA::x8:
+        return "8x";
+    case MSAA::x16:
+        return "16x";
+    case MSAA::x32:
+        return "32x";
+    case MSAA::x64:
+        return "64x";
+    default:
+        return "Unknown";
+    }
 }
 
 void vk::Device::nullifyHandles()
@@ -248,9 +225,9 @@ void vk::Device::createInstance()
 
     VkApplicationInfo app_info = {};
     app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    app_info.pApplicationName = "Flare";
+    app_info.pApplicationName = "Simple Vulkan Engine Testing";
     app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    app_info.pEngineName = "No Engine";
+    app_info.pEngineName = "SVKE";
     app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     app_info.apiVersion = VK_API_VERSION_1_3;
 
@@ -298,7 +275,7 @@ void vk::Device::createSurface()
     window.createSurface(instance, surface);
 }
 
-void vk::Device::pickAdequatePhysicalDevice()
+void vk::Device::pickAdequatePhysicalDevice(const MSAA &preferred_msaa_samples)
 {
     uint32_t device_count = 0;
     vkEnumeratePhysicalDevices(instance, &device_count, nullptr);
@@ -318,11 +295,23 @@ void vk::Device::pickAdequatePhysicalDevice()
     }
 
     if (candidate_devices.rbegin()->first >= 0)
+    {
         physicalDevice = candidate_devices.rbegin()->second;
-    else
-        throw std::runtime_error("vk::Device::pickAdequatePhysicalDevice: FAILED TO FIND A SUITABLE GPU");
+        msaaMaxSamples = queryMaxUsableSampleCount(physicalDevice);
 
-    vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+        vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+
+        currentMsaaSamples = getMsaaSamplesOrClosest(preferred_msaa_samples);
+
+#ifndef NDEBUG
+        std::cout << "USING MSAA SAMPLES: " << getMsaaSamplesAsString(static_cast<MSAA>(currentMsaaSamples))
+                  << std::endl;
+#endif
+    }
+    else
+    {
+        throw std::runtime_error("vk::Device::pickAdequatePhysicalDevice: FAILED TO FIND A SUITABLE GPU");
+    }
 
 #ifndef NDEBUG
     std::cout << "SELECTED DEVICE: " << properties.deviceName << std::endl;
@@ -333,30 +322,31 @@ void vk::Device::createLogicalDevice()
 {
     QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<uint32_t> uniqueQueueFamilies = {*indices.graphicsFamily, *indices.presentFamily};
+    std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
+    std::set<uint32_t> unique_queue_families = {*indices.graphicsFamily, *indices.presentFamily};
 
     float queuePriority = 1.0f;
-    for (uint32_t queueFamily : uniqueQueueFamilies)
+    for (uint32_t queueFamily : unique_queue_families)
     {
-        VkDeviceQueueCreateInfo queueCreateInfo = {};
-        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfo.queueFamilyIndex = queueFamily;
-        queueCreateInfo.queueCount = 1;
-        queueCreateInfo.pQueuePriorities = &queuePriority;
-        queueCreateInfos.push_back(queueCreateInfo);
+        VkDeviceQueueCreateInfo queue_create_info = {};
+        queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queue_create_info.queueFamilyIndex = queueFamily;
+        queue_create_info.queueCount = 1;
+        queue_create_info.pQueuePriorities = &queuePriority;
+        queue_create_infos.push_back(queue_create_info);
     }
 
-    VkPhysicalDeviceFeatures deviceFeatures = {};
-    deviceFeatures.samplerAnisotropy = VK_TRUE;
+    VkPhysicalDeviceFeatures device_features = {};
+    device_features.samplerAnisotropy = VK_TRUE;
+    device_features.sampleRateShading = VK_TRUE;
 
     VkDeviceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
-    createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
-    createInfo.pQueueCreateInfos = queueCreateInfos.data();
+    createInfo.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
+    createInfo.pQueueCreateInfos = queue_create_infos.data();
 
-    createInfo.pEnabledFeatures = &deviceFeatures;
+    createInfo.pEnabledFeatures = &device_features;
     createInfo.enabledExtensionCount = static_cast<uint32_t>(DEVICE_EXTENSIONS.size());
     createInfo.ppEnabledExtensionNames = DEVICE_EXTENSIONS.data();
 
@@ -408,25 +398,6 @@ void vk::Device::createCommandPool()
         throw std::runtime_error("vk::Device::createCommandPool FAILED TO CREATE COMMAND POOL");
 }
 
-const bool vk::Device::isDeviceSuitable(VkPhysicalDevice physical_device)
-{
-    QueueFamilyIndices indices = findQueueFamilies(physical_device);
-
-    bool extensions_supported = checkDeviceExtensionSupport(physical_device);
-    bool swapchain_adequate = false;
-
-    if (extensions_supported)
-    {
-        SwapchainSupportDetails swapchain_support = querySwapchainSupport(physical_device);
-        swapchain_adequate = !swapchain_support.formats.empty() && !swapchain_support.presentModes.empty();
-    }
-
-    VkPhysicalDeviceFeatures supported_features;
-    vkGetPhysicalDeviceFeatures(physical_device, &supported_features);
-
-    return indices.isComplete() && extensions_supported && swapchain_adequate && supported_features.samplerAnisotropy;
-}
-
 const int vk::Device::rateDeviceSuitability(VkPhysicalDevice physical_device)
 {
     int score = 0;
@@ -436,6 +407,7 @@ const int vk::Device::rateDeviceSuitability(VkPhysicalDevice physical_device)
     vkGetPhysicalDeviceProperties(physical_device, &properties);
     vkGetPhysicalDeviceFeatures(physical_device, &features);
     bool extension_support = checkDeviceExtensionSupport(physical_device);
+    auto max_usable_sample_count = queryMaxUsableSampleCount(physical_device);
 
     // Prefer discrete GPU over integrated GPU.
     if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
@@ -602,6 +574,35 @@ const bool vk::Device::checkDeviceExtensionSupport(VkPhysicalDevice physical_dev
         required_extensions.erase(extension.extensionName);
 
     return required_extensions.empty();
+}
+
+VkSampleCountFlagBits vk::Device::queryMaxUsableSampleCount(VkPhysicalDevice physical_device)
+{
+    VkPhysicalDeviceProperties properties;
+    vkGetPhysicalDeviceProperties(physical_device, &properties);
+
+    VkSampleCountFlags counts =
+        properties.limits.framebufferColorSampleCounts & properties.limits.framebufferDepthSampleCounts;
+
+    if (counts & VK_SAMPLE_COUNT_64_BIT)
+        return VK_SAMPLE_COUNT_64_BIT;
+
+    if (counts & VK_SAMPLE_COUNT_32_BIT)
+        return VK_SAMPLE_COUNT_32_BIT;
+
+    if (counts & VK_SAMPLE_COUNT_16_BIT)
+        return VK_SAMPLE_COUNT_16_BIT;
+
+    if (counts & VK_SAMPLE_COUNT_8_BIT)
+        return VK_SAMPLE_COUNT_8_BIT;
+
+    if (counts & VK_SAMPLE_COUNT_4_BIT)
+        return VK_SAMPLE_COUNT_4_BIT;
+
+    if (counts & VK_SAMPLE_COUNT_2_BIT)
+        return VK_SAMPLE_COUNT_2_BIT;
+
+    return VK_SAMPLE_COUNT_1_BIT;
 }
 
 vk::Device::QueueFamilyIndices vk::Device::findQueueFamilies(VkPhysicalDevice physical_device)

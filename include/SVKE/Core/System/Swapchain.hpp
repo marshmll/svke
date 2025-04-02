@@ -80,10 +80,15 @@ class Swapchain
     VkRenderPass renderPass;
 
     std::vector<VkImage> depthImages;
-    std::vector<VmaAllocation> depthImagesMemory;
+    std::vector<VmaAllocation> depthImageAllocations;
     std::vector<VkImageView> depthImageViews;
+
     std::vector<VkImage> images;
     std::vector<VkImageView> imageViews;
+
+    VkImage colorImage;
+    VmaAllocation colorImageAllocation;
+    VkImageView colorImageView;
 
     VkSwapchainKHR swapchain;
     std::shared_ptr<Swapchain> oldSwapchain;
@@ -99,6 +104,8 @@ class Swapchain
     void createSwapchain(const PresentMode &preferred_present_mode);
 
     void createImageViews();
+
+    void createColorResources();
 
     void createDepthResources();
 

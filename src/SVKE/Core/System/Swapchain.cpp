@@ -34,8 +34,11 @@ vk::Swapchain::~Swapchain()
     for (int i = 0; i < depthImages.size(); i++)
     {
         vkDestroyImageView(device.getLogicalDevice(), depthImageViews[i], nullptr);
-        vmaDestroyImage(device.getAllocator(), depthImages[i], depthImagesMemory[i]);
+        vmaDestroyImage(device.getAllocator(), depthImages[i], depthImageAllocations[i]);
     }
+
+    vkDestroyImageView(device.getLogicalDevice(), colorImageView, nullptr);
+    vmaDestroyImage(device.getAllocator(), colorImage, colorImageAllocation);
 
     for (auto framebuffer : framebuffers)
     {
@@ -183,6 +186,7 @@ void vk::Swapchain::init(const PresentMode &preferred_present_mode)
     createSwapchain(preferred_present_mode);
     createImageViews();
     createRenderPass();
+    createColorResources();
     createDepthResources();
     createFramebuffers();
     createSyncObjects();
@@ -276,7 +280,7 @@ void vk::Swapchain::createRenderPass()
 {
     VkAttachmentDescription depth_attachment{};
     depth_attachment.format = findDepthFormat();
-    depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    depth_attachment.samples = device.getCurrentMsaaSamples();
     depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     depth_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -290,23 +294,42 @@ void vk::Swapchain::createRenderPass()
 
     VkAttachmentDescription color_attachment = {};
     color_attachment.format = getImageFormat();
-    color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    color_attachment.samples = device.getCurrentMsaaSamples();
     color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    color_attachment.finalLayout = device.getCurrentMsaaSamples() != VK_SAMPLE_COUNT_1_BIT
+                                       ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+                                       : VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
     VkAttachmentReference color_attachment_ref = {};
     color_attachment_ref.attachment = 0;
     color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+    VkAttachmentDescription color_attachment_resolve{};
+    color_attachment_resolve.format = getImageFormat();
+    color_attachment_resolve.samples = VK_SAMPLE_COUNT_1_BIT;
+    color_attachment_resolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    color_attachment_resolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    color_attachment_resolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    color_attachment_resolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    color_attachment_resolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    color_attachment_resolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+    VkAttachmentReference color_attachment_resolve_ref{};
+    color_attachment_resolve_ref.attachment = 2;
+    color_attachment_resolve_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
     VkSubpassDescription subpass = {};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &color_attachment_ref;
     subpass.pDepthStencilAttachment = &depth_attachment_ref;
+
+    if (device.getCurrentMsaaSamples() != VK_SAMPLE_COUNT_1_BIT)
+        subpass.pResolveAttachments = &color_attachment_resolve_ref;
 
     VkSubpassDependency dependency = {};
     dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -318,7 +341,11 @@ void vk::Swapchain::createRenderPass()
         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
     dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
-    std::array<VkAttachmentDescription, 2> attachments = {color_attachment, depth_attachment};
+    std::vector<VkAttachmentDescription> attachments = {color_attachment, depth_attachment};
+
+    if (device.getCurrentMsaaSamples() != VK_SAMPLE_COUNT_1_BIT)
+        attachments.push_back(color_attachment_resolve);
+
     VkRenderPassCreateInfo render_pass_info = {};
     render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     render_pass_info.attachmentCount = static_cast<uint32_t>(attachments.size());
@@ -338,16 +365,21 @@ void vk::Swapchain::createFramebuffers()
 
     for (size_t i = 0; i < getImageCount(); i++)
     {
-        std::array<VkImageView, 2> attachments = {imageViews[i], depthImageViews[i]};
+        std::vector<VkImageView> attachments;
 
-        VkExtent2D swapchainExtent = getExtent();
+        if (device.getCurrentMsaaSamples() != VK_SAMPLE_COUNT_1_BIT)
+            attachments = {colorImageView, depthImageViews[i], imageViews[i]};
+        else
+            attachments = {imageViews[i], depthImageViews[i]};
+
+        VkExtent2D swapchain_extent = getExtent();
         VkFramebufferCreateInfo framebuffer_info = {};
         framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         framebuffer_info.renderPass = renderPass;
         framebuffer_info.attachmentCount = static_cast<uint32_t>(attachments.size());
         framebuffer_info.pAttachments = attachments.data();
-        framebuffer_info.width = swapchainExtent.width;
-        framebuffer_info.height = swapchainExtent.height;
+        framebuffer_info.width = swapchain_extent.width;
+        framebuffer_info.height = swapchain_extent.height;
         framebuffer_info.layers = 1;
 
         if (vkCreateFramebuffer(device.getLogicalDevice(), &framebuffer_info, nullptr, &framebuffers[i]) != VK_SUCCESS)
@@ -355,13 +387,51 @@ void vk::Swapchain::createFramebuffers()
     }
 }
 
+void vk::Swapchain::createColorResources()
+{
+    auto color_format = this->imageFormat;
+    VkExtent2D swapchain_extent = getExtent();
+
+    VkImageCreateInfo image_info{};
+    image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    image_info.imageType = VK_IMAGE_TYPE_2D;
+    image_info.extent.width = swapchain_extent.width;
+    image_info.extent.height = swapchain_extent.height;
+    image_info.extent.depth = 1;
+    image_info.mipLevels = 1;
+    image_info.arrayLayers = 1;
+    image_info.format = color_format;
+    image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+    image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    image_info.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    image_info.samples = device.getCurrentMsaaSamples();
+    image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    image_info.flags = 0;
+
+    device.createImageWithInfo(image_info, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageAllocation);
+
+    VkImageViewCreateInfo view_info{};
+    view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    view_info.image = colorImage;
+    view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    view_info.format = color_format;
+    view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    view_info.subresourceRange.baseMipLevel = 0;
+    view_info.subresourceRange.levelCount = 1;
+    view_info.subresourceRange.baseArrayLayer = 0;
+    view_info.subresourceRange.layerCount = 1;
+
+    if (vkCreateImageView(device.getLogicalDevice(), &view_info, nullptr, &colorImageView) != VK_SUCCESS)
+        throw std::runtime_error("vk::Swapchain::createColorResources: FAILED TO CREATE COLOR IMAGE VIEW");
+}
+
 void vk::Swapchain::createDepthResources()
 {
     depthFormat = findDepthFormat();
-    VkExtent2D swapchainExtent = getExtent();
+    VkExtent2D swapchain_extent = getExtent();
 
     depthImages.resize(getImageCount());
-    depthImagesMemory.resize(getImageCount());
+    depthImageAllocations.resize(getImageCount());
     depthImageViews.resize(getImageCount());
 
     for (int i = 0; i < depthImages.size(); i++)
@@ -369,8 +439,8 @@ void vk::Swapchain::createDepthResources()
         VkImageCreateInfo image_info{};
         image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         image_info.imageType = VK_IMAGE_TYPE_2D;
-        image_info.extent.width = swapchainExtent.width;
-        image_info.extent.height = swapchainExtent.height;
+        image_info.extent.width = swapchain_extent.width;
+        image_info.extent.height = swapchain_extent.height;
         image_info.extent.depth = 1;
         image_info.mipLevels = 1;
         image_info.arrayLayers = 1;
@@ -378,12 +448,12 @@ void vk::Swapchain::createDepthResources()
         image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
         image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         image_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-        image_info.samples = VK_SAMPLE_COUNT_1_BIT;
+        image_info.samples = device.getCurrentMsaaSamples();
         image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         image_info.flags = 0;
 
         device.createImageWithInfo(image_info, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImages[i],
-                                   depthImagesMemory[i]);
+                                   depthImageAllocations[i]);
 
         VkImageViewCreateInfo view_info{};
         view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -397,9 +467,7 @@ void vk::Swapchain::createDepthResources()
         view_info.subresourceRange.layerCount = 1;
 
         if (vkCreateImageView(device.getLogicalDevice(), &view_info, nullptr, &depthImageViews[i]) != VK_SUCCESS)
-        {
-            throw std::runtime_error("vk::Swapchain::createDepthResources: FAILED TO CREATE TEXTURE IMAGE VIEW");
-        }
+            throw std::runtime_error("vk::Swapchain::createDepthResources: FAILED TO CREATE DEPTH IMAGE VIEW");
     }
 }
 

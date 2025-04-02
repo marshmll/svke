@@ -131,8 +131,6 @@ void vk::Window::setFullscreen(const bool fullscreen)
         // backup window position and window size
         glfwGetWindowPos(window, &x, &y);
 
-        std::cout << x << " " << y << " " << width << " " << height << std::endl;
-
         // get resolution of monitor
         const GLFWvidmode *mode = glfwGetVideoMode(monitor);
 

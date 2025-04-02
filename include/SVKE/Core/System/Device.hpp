@@ -35,7 +35,18 @@ class Device
         inline const bool isComplete() { return graphicsFamily.has_value() && presentFamily.has_value(); }
     };
 
-    Device(Window &window);
+    enum class MSAA : int
+    {
+        x1 = VK_SAMPLE_COUNT_1_BIT,
+        x2 = VK_SAMPLE_COUNT_2_BIT,
+        x4 = VK_SAMPLE_COUNT_4_BIT,
+        x8 = VK_SAMPLE_COUNT_8_BIT,
+        x16 = VK_SAMPLE_COUNT_16_BIT,
+        x32 = VK_SAMPLE_COUNT_32_BIT,
+        x64 = VK_SAMPLE_COUNT_64_BIT
+    };
+
+    Device(Window &window, const MSAA &preferred_msaa_samples = MSAA::x1);
 
     Device(const Device &) = delete;
     Device &operator=(const Device &) = delete;
@@ -60,31 +71,25 @@ class Device
 
     SwapchainSupportDetails getSwapchainSupport();
 
-    const uint32_t findMemoryType(const uint32_t typeFilter, VkMemoryPropertyFlags properties);
+    const VkSampleCountFlagBits &getMsaaMaxSamples() const;
+
+    const VkSampleCountFlagBits &getCurrentMsaaSamples() const;
+
+    VkSampleCountFlagBits getMsaaSamplesOrClosest(const MSAA &samples) const;
 
     QueueFamilyIndices findPhysicalQueueFamilies();
 
     VkFormat findSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling,
                                  VkFormatFeatureFlags features);
 
-    // Buffer Helper Functions
-    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memory_usage, VkBuffer &buffer,
-                      VmaAllocation &allocation);
-
-    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memory_usage, VkBuffer &buffer,
-                      VmaAllocation &allocation, VmaAllocationCreateFlags flags);
-
     VkCommandBuffer beginSingleTimeCommands();
 
     void endSingleTimeCommands(VkCommandBuffer command_buffer);
 
-    void copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size);
-
-    void copyBufferToImage(VkBuffer &buffer, VkImage &image, const uint32_t width, const uint32_t height,
-                           const uint32_t layer_count);
-
     void createImageWithInfo(const VkImageCreateInfo &image_info, VkMemoryPropertyFlags properties, VkImage &image,
                              VmaAllocation &image_memory);
+
+    static const std::string getMsaaSamplesAsString(const MSAA &samples);
 
   private:
     Window &window;
@@ -100,6 +105,9 @@ class Device
     VmaAllocator allocator;
     VkCommandPool commandPool;
 
+    VkSampleCountFlagBits msaaMaxSamples;
+    VkSampleCountFlagBits currentMsaaSamples;
+
     void nullifyHandles();
 
     void createInstance();
@@ -108,15 +116,13 @@ class Device
 
     void createSurface();
 
-    void pickAdequatePhysicalDevice();
+    void pickAdequatePhysicalDevice(const MSAA &preferred_msaa_level);
 
     void createLogicalDevice();
 
     void createVmaAllocator();
 
     void createCommandPool();
-
-    const bool isDeviceSuitable(VkPhysicalDevice physical_device);
 
     const int rateDeviceSuitability(VkPhysicalDevice physical_device);
 
@@ -133,6 +139,8 @@ class Device
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physical_device);
 
     SwapchainSupportDetails querySwapchainSupport(VkPhysicalDevice physical_device);
+
+    VkSampleCountFlagBits queryMaxUsableSampleCount(VkPhysicalDevice physical_device);
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                                                         VkDebugUtilsMessageTypeFlagsEXT messageType,

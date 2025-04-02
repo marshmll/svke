@@ -90,6 +90,9 @@ void vk::App::run()
         else if (keyboard.isKeyPressed(Keyboard::Key::Enter))
             mouse.setCursorMode(Mouse::CursorMode::Disabled);
 
+        if (keyboard.isKeyPressed(Keyboard::Key::F11) && !window->isFullscreen())
+            window->setFullscreen(true);
+
         const float aspect_ratio = renderer->getAspectRatio();
         camera.setPerspectiveProjection(Angle::Rad45, aspect_ratio, .01f, 1000.f);
 
@@ -142,7 +145,7 @@ void vk::App::createWindow()
 
 void vk::App::createDevice()
 {
-    device = std::make_unique<Device>(*window);
+    device = std::make_unique<Device>(*window, Device::MSAA::x1);
 }
 
 void vk::App::createRenderer()
@@ -187,9 +190,7 @@ void vk::App::loadObjects()
         if (!skull_texture.loadFromFile("assets/textures/skull.jpg"))
             std::cerr << "Failed to load skull_texture" << std::endl;
 
-        std::shared_ptr<TextureImage> skull_texture_image = std::make_shared<TextureImage>(
-            *device, skull_texture, TextureImage::Format::RGBA, TextureImage::Tiling::Optimal,
-            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+        std::shared_ptr<TextureImage> skull_texture_image = std::make_shared<TextureImage>(*device, skull_texture);
 
         Object skull;
         skull.setModel(skull_model);
@@ -209,9 +210,7 @@ void vk::App::loadObjects()
         if (!cube_texture.loadFromFile("assets/textures/cube.png"))
             std::cerr << "Failed to load cube_texture" << std::endl;
 
-        std::shared_ptr<TextureImage> cube_texture_image = std::make_shared<TextureImage>(
-            *device, cube_texture, TextureImage::Format::RGBA, TextureImage::Tiling::Optimal,
-            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+        std::shared_ptr<TextureImage> cube_texture_image = std::make_shared<TextureImage>(*device, cube_texture);
 
         Object cube;
         cube.setModel(cube_model);
