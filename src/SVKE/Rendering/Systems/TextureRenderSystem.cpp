@@ -77,6 +77,8 @@ void vk::TextureRenderSystem::createPipeline(VkRenderPass render_pass)
     pipeline_config.renderPass = render_pass;
     pipeline_config.pipelineLayout = pipelineLayout;
     pipeline_config.multisampleInfo.rasterizationSamples = device.getCurrentMsaaSamples();
+    pipeline_config.rasterizationInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+    pipeline_config.rasterizationInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
     // Optional: Shader antialiasing, smooths inner parts of shapes. Might cost some performance
     pipeline_config.multisampleInfo.sampleShadingEnable = VK_TRUE;

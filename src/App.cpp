@@ -145,7 +145,7 @@ void vk::App::createWindow()
 
 void vk::App::createDevice()
 {
-    device = std::make_unique<Device>(*window, Device::MSAA::x1);
+    device = std::make_unique<Device>(*window, Device::MSAA::x2);
 }
 
 void vk::App::createRenderer()
@@ -164,8 +164,8 @@ void vk::App::createGlobalPool()
 void vk::App::createObjectTexturePool()
 {
     objectTexturePool = DescriptorPool::Builder(*device)
-                            .setMaxSets(Swapchain::MAX_FRAMES_IN_FLIGHT)
-                            .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, sizeof(Object::objid_t))
+                            .setMaxSets(1024)
+                            .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1024)
                             .build();
 }
 
@@ -201,23 +201,30 @@ void vk::App::loadObjects()
         objects[skull.getId()] = std::move(skull);
     }
 
+    std::shared_ptr<Model> cube_model = std::make_shared<Model>(*device);
+    if (!cube_model->loadFromFile("assets/models/cube_tex.obj"))
+        throw std::runtime_error("vl::App::loadObjects: Failed to load Cube model");
+
+    Texture cube_texture;
+    if (!cube_texture.loadFromFile("assets/textures/cube.png"))
+        std::cerr << "Failed to load cube_texture" << std::endl;
+
+    std::shared_ptr<TextureImage> cube_texture_image = std::make_shared<TextureImage>(*device, cube_texture);
+
+    for (float i = 0.f; i < 4.f; ++i)
     {
-        std::shared_ptr<Model> cube_model = std::make_shared<Model>(*device);
-        if (!cube_model->loadFromFile("assets/models/cube_tex.obj"))
-            throw std::runtime_error("vl::App::loadObjects: Failed to load Cube model");
-
-        Texture cube_texture;
-        if (!cube_texture.loadFromFile("assets/textures/cube.png"))
-            std::cerr << "Failed to load cube_texture" << std::endl;
-
-        std::shared_ptr<TextureImage> cube_texture_image = std::make_shared<TextureImage>(*device, cube_texture);
-
-        Object cube;
-        cube.setModel(cube_model);
-        cube.setTextureImage(cube_texture_image);
-        cube.setTranslation({1.f, 0.f, 0.f});
-        cube.setScale({1.f, 1.f, 1.f});
-        objects[cube.getId()] = std::move(cube);
+        for (float j = 0.f; j < 4.f; ++j)
+        {
+            for (float k = 0.f; k < 4.f; ++k)
+            {
+                Object cube;
+                cube.setModel(cube_model);
+                cube.setTextureImage(cube_texture_image);
+                cube.setScale({.5f, .5f, .5f});
+                cube.setTranslation(Vec3f{i + 1.f, k + 1.f, j + 1.f} * cube.getScale());
+                objects[cube.getId()] = std::move(cube);
+            }
+        }
     }
 
     std::vector<Color> light_colors{COLOR_RED,  COLOR_ORANGE, COLOR_YELLOW, COLOR_GREEN,
