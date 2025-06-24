@@ -203,6 +203,9 @@ void vk::Swapchain::createSwapchain(const PresentMode &preferred_present_mode)
     uint32_t image_count = swapchainSupport.capabilities.minImageCount + 1;
     if (swapchainSupport.capabilities.maxImageCount > 0 && image_count > swapchainSupport.capabilities.maxImageCount)
         image_count = swapchainSupport.capabilities.maxImageCount;
+    
+    if (image_count > MAX_FRAMES_IN_FLIGHT)
+        image_count = MAX_FRAMES_IN_FLIGHT;
 
     VkSwapchainCreateInfoKHR swapchain_info = {};
     swapchain_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;

@@ -201,32 +201,6 @@ void vk::App::loadObjects()
         objects[skull.getId()] = std::move(skull);
     }
 
-    std::shared_ptr<Model> cube_model = std::make_shared<Model>(*device);
-    if (!cube_model->loadFromFile("assets/models/cube_tex.obj"))
-        throw std::runtime_error("vl::App::loadObjects: Failed to load Cube model");
-
-    Texture cube_texture;
-    if (!cube_texture.loadFromFile("assets/textures/cube.png"))
-        std::cerr << "Failed to load cube_texture" << std::endl;
-
-    std::shared_ptr<TextureImage> cube_texture_image = std::make_shared<TextureImage>(*device, cube_texture);
-
-    for (float i = 0.f; i < 4.f; ++i)
-    {
-        for (float j = 0.f; j < 4.f; ++j)
-        {
-            for (float k = 0.f; k < 4.f; ++k)
-            {
-                Object cube;
-                cube.setModel(cube_model);
-                cube.setTextureImage(cube_texture_image);
-                cube.setScale({.5f, .5f, .5f});
-                cube.setTranslation(Vec3f{i + 1.f, k + 1.f, j + 1.f} * cube.getScale());
-                objects[cube.getId()] = std::move(cube);
-            }
-        }
-    }
-
     std::vector<Color> light_colors{COLOR_RED,  COLOR_ORANGE, COLOR_YELLOW, COLOR_GREEN,
                                     COLOR_CYAN, COLOR_BLUE,   COLOR_PURPLE};
 
